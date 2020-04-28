@@ -38,9 +38,9 @@ Apify.main(async () => {
             });
 
             totalLoaded += items.length;
-            console.log(`Items loaded: ${items.length}, total loaded: ${totalLoaded}`);
 
             if (items.length === 0) {
+                console.log(`All items loaded from dataset: ${datasetId}`);
                 break;
             }
 
@@ -50,6 +50,8 @@ Apify.main(async () => {
                     dedupObject[key] = item;
                 }
             }
+
+            console.log(`Items loaded from dataset ${datasetId}: ${items.length}, total loaded for dataset ${datasetId}: ${totalLoaded}, total unique: ${Object.keys(dedupObject).length}`);
 
             offset += batchSizeInit;
         }
@@ -85,7 +87,8 @@ Apify.main(async () => {
                 pushedItems[datasetId] += slice.length;
                 await Apify.setValue('PUSHED', pushedItems);
                 const { itemCount } = await outputDataset.getInfo();
-                console.log(`Pushed: ${pushedItems[datasetId]}, Dataset: ${itemCount}`);
+                const pushedTotal = Object.values(pushedItems).reduce((acc, val) => acc + val);
+                console.log(`Pushed from dataset ${datasetId}: ${pushedItems[datasetId]}, Pushed total: ${pushedTotal}, In dataset (delayed): ${itemCount}`);
                 await Apify.utils.sleep(uploadSleepMs);
             }
         }
