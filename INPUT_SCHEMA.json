@@ -1,0 +1,44 @@
+{
+    "title": "Spreadsheet import input",
+    "type": "object",
+    "schemaVersion": 1,
+    "required": ["datasetIds", "fields"],
+    "properties": {
+        "datasetIds": {
+            "title": "Dataset IDs",
+            "type": "array",
+            "description": "Datasets that should be deduplicated and merged",
+            "editor": "stringList"
+        },
+        "fields": {
+            "title": "Fields for dedup",
+            "type": "array",
+            "description": "Fields whose combination should be unique for the item to be considered unique",
+            "editor": "stringList"
+        },
+        "doPush": {
+            "title": "Do push",
+            "type": "boolean",
+            "description": "If true, will also push unique items into new dataset. False is useful for getting information about number of duplicates.",
+            "default": true
+        },
+        "outputDatasetId": {
+            "title": "Output dataset ID (optional)",
+            "type": "string",
+            "description": "Optionally can push into non-default dataset.",
+            "editor": "textfield"
+        },
+        "uploadSleepMs": {
+            "title": "Upload sleep ms",
+            "type": "integer",
+            "description": "How long it should wait between each batch when uploading. Useful to not overload Apify API.",
+            "default": 5000
+        },
+        "uploadBatchSize": {
+            "title": "Upload batch size",
+            "type": "integer",
+            "description": "How many items it should upload in one pushData call. Useful to not overload Apify API.",
+            "default": 2000
+        }
+    }
+}
