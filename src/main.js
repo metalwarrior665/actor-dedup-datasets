@@ -26,8 +26,9 @@ Apify.main(async () => {
 
     const dedupMap = new BigMap();
     const batchSizeInit = 50000;
+    let totalLoaded = 0;
     const processDataset = async (datasetId) => {
-        let totalLoaded = 0;
+        let totalLoadedPerDataset = 0;
         let offset = 0;
 
         while (true) {
@@ -38,6 +39,7 @@ Apify.main(async () => {
                 fields: doPush ? null : fields, // If we doPush, we want the full items, otherwise we take just the fields for speed
             });
 
+            totalLoadedPerDataset += items.length;
             totalLoaded += items.length;
 
             if (items.length === 0) {
@@ -52,7 +54,12 @@ Apify.main(async () => {
                 }
             }
 
-            console.log(`Items loaded from dataset ${datasetId}: ${items.length}, total loaded for dataset ${datasetId}: ${totalLoaded}, total unique: ${dedupMap.size}`);
+            console.log(
+                `Items loaded from dataset ${datasetId}: ${items.length},
+                total loaded from dataset ${datasetId}: ${totalLoadedPerDataset},
+                total loaded: ${totalLoaded},
+                total unique: ${dedupMap.size}`,
+            );
 
             offset += batchSizeInit;
         }
