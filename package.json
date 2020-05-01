@@ -3,7 +3,8 @@
 	"version": "0.0.1",
 	"description": "This is a boilerplate of an Apify actor.",
 	"dependencies": {
-		"apify": "^0.20.3"
+		"apify": "^0.20.3",
+		"big-map-simple": "^1.0.2"
 	},
 	"scripts": {
 		"start": "node src/main.js",

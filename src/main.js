@@ -1,4 +1,5 @@
 const Apify = require('apify');
+const BigMap = require('big-map-simple')
 
 Apify.main(async () => {
     // Get input of your actor
@@ -23,7 +24,7 @@ Apify.main(async () => {
         throw new Error('WRONG INPUT --- Missing fields!');
     }
 
-    const dedupObject = {};
+    const dedupMap = new BigMap();
     const batchSizeInit = 50000;
     const processDataset = async (datasetId) => {
         let totalLoaded = 0;
@@ -46,19 +47,19 @@ Apify.main(async () => {
 
             for (const item of items) {
                 const key = fields.map((field) => item[field]).join();
-                if (!dedupObject[key]) {
-                    dedupObject[key] = item;
+                if (!dedupMap.has(key)) {
+                    dedupMap.set(key, item);
                 }
             }
 
-            console.log(`Items loaded from dataset ${datasetId}: ${items.length}, total loaded for dataset ${datasetId}: ${totalLoaded}, total unique: ${Object.keys(dedupObject).length}`);
+            console.log(`Items loaded from dataset ${datasetId}: ${items.length}, total loaded for dataset ${datasetId}: ${totalLoaded}, total unique: ${dedupMap.size}`);
 
             offset += batchSizeInit;
         }
-        const filteredItems = Object.values(dedupObject);
+        const filteredItems = dedupMap.values();
 
         return { items: filteredItems, length: filteredItems.length };
-    }
+    };
 
     const outputDataset = await Apify.openDataset(outputDatasetId);
     let isMigrating = false;

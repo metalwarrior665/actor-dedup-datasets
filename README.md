@@ -1,4 +1,4 @@
-# Dedup dataset
+# Dedup datasets
 
 Deduplicates one or more datasets by a set of fields and merges them together into one dataset of unique items.
 
