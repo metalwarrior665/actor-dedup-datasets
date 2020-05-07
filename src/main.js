@@ -1,5 +1,6 @@
 const Apify = require('apify');
-const BigMap = require('big-map-simple')
+const BigMap = require('big-map-simple');
+const Promise = require('bluebird');
 
 Apify.main(async () => {
     // Get input of your actor
@@ -13,7 +14,10 @@ Apify.main(async () => {
         fields,
         outputDatasetId,
         uploadSleepMs = 5000,
-        uploadBatchSize = 2000,
+        uploadBatchSize = 5000,
+        batchSizeLoad = 50000,
+        parallelLoads = 1,
+        loadAllfirst = true,
     } = input;
 
     if (!(Array.isArray(datasetIds) && datasetIds.length > 0)) {
@@ -23,50 +27,74 @@ Apify.main(async () => {
     if (!(Array.isArray(fields) && datasetIds.length > 0)) {
         throw new Error('WRONG INPUT --- Missing fields!');
     }
+    const loadStart = Date.now();
 
-    const dedupMap = new BigMap();
-    const batchSizeInit = 50000;
     let totalLoaded = 0;
-    const processDataset = async (datasetId) => {
-        let totalLoadedPerDataset = 0;
-        let offset = 0;
 
-        while (true) {
+    // This is array of arrays. Top level array is for each dataset and inside one entry for each batch (in order)
+    const loadedBatchedArr = [];
+    // We increment for each dataset so we remember their order
+    let datasetIndex = 0;
+    for (const datasetId of datasetIds) {
+        loadedBatchedArr[datasetIndex] = [];
+        let totalLoadedPerDataset = 0;
+        // We get the number of items first and then we precreate request info objects
+        const { cleanItemCount } = await Apify.client.datasets.getDataset({ datasetId });
+        console.log(`Dataset ${datasetId} has ${cleanItemCount} items`);
+        const numberOfBatches = Math.ceil(cleanItemCount / batchSizeLoad);
+
+        const requestInfoArr = [];
+        for (let i = 0; i < numberOfBatches; i++) {
+            requestInfoArr.push({
+                index: i,
+                offset: i * batchSizeLoad,
+            });
+        }
+
+        // eslint-disable-next-line no-loop-func
+        await Promise.map(requestInfoArr, async (requestInfoObj) => {
             const { items } = await Apify.client.datasets.getItems({
                 datasetId,
-                offset,
-                limit: batchSizeInit,
+                offset: requestInfoObj.offset,
+                limit: batchSizeLoad,
                 fields: doPush ? null : fields, // If we doPush, we want the full items, otherwise we take just the fields for speed
             });
 
             totalLoadedPerDataset += items.length;
             totalLoaded += items.length;
 
-            if (items.length === 0) {
-                console.log(`All items loaded from dataset: ${datasetId}`);
-                break;
-            }
-
-            for (const item of items) {
-                const key = fields.map((field) => item[field]).join();
-                if (!dedupMap.has(key)) {
-                    dedupMap.set(key, item);
-                }
-            }
-
             console.log(
                 `Items loaded from dataset ${datasetId}: ${items.length},
                 total loaded from dataset ${datasetId}: ${totalLoadedPerDataset},
-                total loaded: ${totalLoaded},
-                total unique: ${dedupMap.size}`,
+                total loaded: ${totalLoaded}`,
             );
 
-            offset += batchSizeInit;
-        }
-        const filteredItems = dedupMap.values();
+            // Now we correctly assign the items into the main array
+            loadedBatchedArr[datasetIndex][requestInfoObj.index] = items;
+        }, { concurrency: parallelLoads });
 
-        return { items: filteredItems, length: filteredItems.length };
-    };
+        datasetIndex++;
+    }
+    console.log(`Loading took ${Math.round((Date.now() - loadStart) / 1000)} seconds`);
+
+    // We dedup everything at once
+    const dedupStart = Date.now();
+    const dedupMap = new BigMap();
+    for (const datasetBatches of loadedBatchedArr) {
+        for (const item of datasetBatches) {
+            const key = fields.map((field) => item[field]).join('');
+            if (!dedupMap.has(key)) {
+                dedupMap.set(key, item);
+            }
+        }
+    }
+
+    console.log(`Dedup took ${Math.round((Date.now() - dedupStart) / 1000)} seconds`);
+
+    const valuesStart = Date.now();
+    const dedupedItems = dedupMap.values();
+    console.log(`Turning Map into values took ${Math.round((Date.now() - valuesStart) / 1000)} seconds`);
+    console.log(`Total loaded: ${totalLoaded}, Total unique: ${dedupedItems.length}`);
 
     const outputDataset = await Apify.openDataset(outputDatasetId);
     let isMigrating = false;
@@ -74,31 +102,23 @@ Apify.main(async () => {
         isMigrating = true;
     });
 
-    const pushedItems = (await Apify.getValue('PUSHED')) || {};
+    let pushedItems = (await Apify.getValue('PUSHED')) || 0;
 
-    for (const datasetId of datasetIds) {
-        const { items, length } = await processDataset(datasetId);
-
-        if (doPush) {
-            if (!(pushedItems[datasetId])) {
-                pushedItems[datasetId] = 0;
+    // Now we push from the whole BigMap
+    if (doPush) {
+        for (let i = pushedItems; i < dedupedItems.length; i += uploadBatchSize) {
+            if (isMigrating) {
+                console.log('Forever sleeping until migration');
+                // Do nothing
+                await new Promise(() => {});
             }
-
-            for (let i = pushedItems[datasetId]; i < length; i += uploadBatchSize) {
-                if (isMigrating) {
-                    console.log('Forever sleeping until migration');
-                    // Do nothing
-                    await new Promise(() => {});
-                }
-                const slice = items.slice(i, i + uploadBatchSize);
-                await outputDataset.pushData(slice);
-                pushedItems[datasetId] += slice.length;
-                await Apify.setValue('PUSHED', pushedItems);
-                const { itemCount } = await outputDataset.getInfo();
-                const pushedTotal = Object.values(pushedItems).reduce((acc, val) => acc + val);
-                console.log(`Pushed from dataset ${datasetId}: ${pushedItems[datasetId]}, Pushed total: ${pushedTotal}, In dataset (delayed): ${itemCount}`);
-                await Apify.utils.sleep(uploadSleepMs);
-            }
+            const slice = dedupedItems.slice(i, i + uploadBatchSize);
+            await outputDataset.pushData(slice);
+            pushedItems += slice.length;
+            await Apify.setValue('PUSHED', pushedItems);
+            const { itemCount } = await outputDataset.getInfo();
+            console.log(`Pushed total: ${pushedItems}, In dataset (delayed): ${itemCount}`);
+            await Apify.utils.sleep(uploadSleepMs);
         }
     }
 });
