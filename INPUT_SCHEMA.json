@@ -28,6 +28,13 @@
             "description": "Optionally can push into non-default dataset.",
             "editor": "textfield"
         },
+        "parallelLoads": {
+            "title": "Parallel loads",
+            "type": "integer",
+            "description": "Datasets can be loaded in parallel batches to speed things up if needed.",
+            "default": 10,
+            "maximum": 100
+        },
         "uploadSleepMs": {
             "title": "Upload sleep ms",
             "type": "integer",
