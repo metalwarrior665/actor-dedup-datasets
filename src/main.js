@@ -11,7 +11,7 @@ Apify.main(async () => {
 
     const {
         datasetIds,
-        outputUniques = true,
+        outputUniques = false,
         outputDuplicates = false,
         fields,
         outputDatasetId,
@@ -19,7 +19,7 @@ Apify.main(async () => {
         uploadBatchSize = 5000,
         batchSizeLoad = 50000,
         parallelLoads = 1,
-        dedupAfterLoad = false,
+        dedupAfterLoad = true,
         dedupAsLoading = false,
     } = input;
 
