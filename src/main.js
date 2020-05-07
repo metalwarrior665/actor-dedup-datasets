@@ -11,14 +11,15 @@ Apify.main(async () => {
 
     const {
         datasetIds,
-        doPush,
+        outputUniques = true,
+        outputDuplicates = false,
         fields,
         outputDatasetId,
         uploadSleepMs = 5000,
         uploadBatchSize = 5000,
         batchSizeLoad = 50000,
         parallelLoads = 1,
-        dedupAfterLoad = true,
+        dedupAfterLoad = false,
         dedupAsLoading = false,
     } = input;
 
@@ -30,7 +31,11 @@ Apify.main(async () => {
         throw new Error('WRONG INPUT --- Missing fields!');
     }
 
-    const context = { datasetIds, batchSizeLoad, doPush, fields, parallelLoads, outputDatasetId, uploadBatchSize, uploadSleepMs };
+    if (outputUniques && outputDuplicates) {
+        throw new Error('WRONG INPUT --- Choose only one of outputUnique or outputDuplicates');
+    }
+
+    const context = { datasetIds, batchSizeLoad, outputUniques, outputDuplicates, fields, parallelLoads, outputDatasetId, uploadBatchSize, uploadSleepMs };
 
     if (dedupAfterLoad) {
         await dedupAfterLoadFn(context);

@@ -16,11 +16,17 @@
             "description": "Fields whose combination should be unique for the item to be considered unique",
             "editor": "stringList"
         },
-        "doPush": {
+        "outputUniques": {
             "title": "Do push",
             "type": "boolean",
-            "description": "If true, will also push unique items into new dataset. False is useful for getting information about number of duplicates.",
-            "default": true
+            "description": "If true, will also push unique items into new dataset.",
+            "default": false
+        },
+        "outputDuplicates": {
+            "title": "Do push",
+            "type": "boolean",
+            "description": "If true, will also push duplicate items into new dataset. Adds a 'duplicationKey' field to each item. Useful for analysis.",
+            "default": false
         },
         "outputDatasetId": {
             "title": "Output dataset ID (optional)",
@@ -45,7 +51,7 @@
             "title": "Upload batch size",
             "type": "integer",
             "description": "How many items it should upload in one pushData call. Useful to not overload Apify API.",
-            "default": 2000
+            "default": 5000
         }
     }
 }
