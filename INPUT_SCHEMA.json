@@ -17,13 +17,13 @@
             "editor": "stringList"
         },
         "outputUniques": {
-            "title": "Do push",
+            "title": "Output uniques",
             "type": "boolean",
             "description": "If true, will also push unique items into new dataset.",
             "default": false
         },
         "outputDuplicates": {
-            "title": "Do push",
+            "title": "Output duplicates",
             "type": "boolean",
             "description": "If true, will also push duplicate items into new dataset. Adds a 'duplicationKey' field to each item. Useful for analysis.",
             "default": false
