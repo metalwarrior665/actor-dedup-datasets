@@ -2,7 +2,7 @@ const Apify = require('apify');
 const BigMap = require('big-map-simple');
 const Promise = require('bluebird');
 
-module.exports = async ({ datasetIds, batchSizeLoad, outputUnique, outputDuplicates, fields, parallelLoads, outputDatasetId, uploadBatchSize, uploadSleepMs }) => {
+module.exports = async ({ datasetIds, batchSizeLoad, outputUniques, outputDuplicates, fields, parallelLoads, outputDatasetId, uploadBatchSize, uploadSleepMs }) => {
     const loadStart = Date.now();
 
     let totalLoaded = 0;
@@ -33,7 +33,7 @@ module.exports = async ({ datasetIds, batchSizeLoad, outputUnique, outputDuplica
                 datasetId,
                 offset: requestInfoObj.offset,
                 limit: batchSizeLoad,
-                fields: outputUnique || outputDuplicates ? null : fields, // If we doPush, we want the full items, otherwise we take just the fields for speed
+                fields: outputUniques || outputDuplicates ? null : fields, // If we doPush, we want the full items, otherwise we take just the fields for speed
             });
 
             totalLoadedPerDataset += items.length;
@@ -97,7 +97,7 @@ module.exports = async ({ datasetIds, batchSizeLoad, outputUnique, outputDuplica
     });
 
     // Now we push from the whole BigMap
-    if (outputUnique || outputDuplicates) {
+    if (outputUniques || outputDuplicates) {
         for (let i = pushedItemsCount; i < dedupedItems.length; i += uploadBatchSize) {
             if (isMigrating) {
                 console.log('Forever sleeping until migration');
