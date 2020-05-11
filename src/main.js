@@ -11,7 +11,7 @@ Apify.main(async () => {
 
     const {
         datasetIds,
-        outputUniques = false,
+        outputUniques = true,
         outputDuplicates = false,
         fields,
         outputDatasetId,

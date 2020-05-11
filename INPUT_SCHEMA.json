@@ -20,7 +20,7 @@
             "title": "Output uniques",
             "type": "boolean",
             "description": "If true, will also push unique items into new dataset.",
-            "default": false
+            "default": true
         },
         "outputDuplicates": {
             "title": "Output duplicates",
