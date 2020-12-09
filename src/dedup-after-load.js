@@ -30,6 +30,7 @@ module.exports = async ({ datasetIds, batchSizeLoad, outputUniques, outputDuplic
         // eslint-disable-next-line no-loop-func
         await Promise.map(requestInfoArr, async (requestInfoObj) => {
             const { items } = await Apify.client.datasets.getItems({
+                clean: true,
                 datasetId,
                 offset: requestInfoObj.offset,
                 limit: batchSizeLoad,
