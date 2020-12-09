@@ -16,17 +16,23 @@
             "description": "Fields whose combination should be unique for the item to be considered unique",
             "editor": "stringList"
         },
-        "outputUniques": {
-            "title": "Output uniques",
-            "type": "boolean",
-            "description": "If true, will also push unique items into new dataset.",
-            "default": true
+        "output": {
+            "title": "What to output",
+            "type": "string",
+            "description": "What will be pushed to the dataset from this actor",
+            "editor": "select",
+            "default": "unique-items",
+            "enum": ["unique-items", "duplicate-items", "nothing"],
+            "enumTitles": ["Unique items", "Duplicate items", "Nothing (checking number of duplicates)"]
         },
-        "outputDuplicates": {
-            "title": "Output duplicates",
-            "type": "boolean",
-            "description": "If true, will also push duplicate items into new dataset. Adds a 'duplicationKey' field to each item. Useful for analysis.",
-            "default": false
+        "mode": {
+            "title": "Mode",
+            "type": "string",
+            "description": "How the loading and deduplication process will work.",
+            "editor": "select",
+            "default": "dedup-after-load",
+            "enum": ["dedup-after-load", "dedup-as-loading"],
+            "enumTitles": ["Dedup after load (high memory use, keeps the order of items)", "Dedup as loading (low memory, no order, experimental!!!)"]
         },
         "outputDatasetId": {
             "title": "Output dataset ID (optional)",

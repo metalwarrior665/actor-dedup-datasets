@@ -19,8 +19,8 @@ Apify.main(async () => {
         uploadBatchSize = 5000,
         batchSizeLoad = 50000,
         parallelLoads = 1,
-        dedupAfterLoad = true,
-        dedupAsLoading = false,
+        mode = 'dedup-after-load',
+        output = 'unique-items',
     } = input;
 
     if (!(Array.isArray(datasetIds) && datasetIds.length > 0)) {
@@ -35,11 +35,11 @@ Apify.main(async () => {
         throw new Error('WRONG INPUT --- Choose only one of outputUnique or outputDuplicates');
     }
 
-    const context = { datasetIds, batchSizeLoad, outputUniques, outputDuplicates, fields, parallelLoads, outputDatasetId, uploadBatchSize, uploadSleepMs };
+    const context = { datasetIds, batchSizeLoad, output, fields, parallelLoads, outputDatasetId, uploadBatchSize, uploadSleepMs };
 
-    if (dedupAfterLoad) {
+    if (mode === 'dedup-after-load') {
         await dedupAfterLoadFn(context);
-    } else if (dedupAsLoading) {
+    } else if (mode === 'dedup-as-loading') {
         // This path is not working yet
         await dedupAsLoadingFn(context);
     }
