@@ -1,94 +1,83 @@
 const Apify = require('apify');
-const BigMap = require('big-map-simple');
-const Promise = require('bluebird');
+const BigSet = require('big-set');
 
-module.exports = async ({ datasetIds, batchSizeLoad, doPush, fields, parallelLoads, outputDatasetId, uploadBatchSize, uploadSleepMs }) => {
-    // Here we dedup as we go
-    const dedupMap = new BigMap();
-    const loadStart = Date.now();
+const { loadDatasetItemsInParallel } = require('./loader');
+const { persistedPush, dedup } = require('./utils');
 
-    let totalLoaded = 0;
+const { log } = Apify.utils;
 
+// Here we dedup&push as we load the batches.
+// Note that high concurrency can overload the dataset and introduce duplicates (due to bug in dataset backend)
+module.exports = async ({
+    datasetIds,
+    batchSizeLoad,
+    output,
+    fields,
+    parallelLoads,
+    outputDatasetId,
+    uploadBatchSize,
+    uploadSleepMs,
+    datasetIdsOfFilterItems,
+    pushState,
+}) => {
+    // We fill the state with datasetId object in the start to keep track of each dataset/offset batches
     for (const datasetId of datasetIds) {
-        let totalLoadedPerDataset = 0;
-        // We get the number of items first and then we precreate request info objects
-        const { cleanItemCount } = await Apify.client.datasets.getDataset({ datasetId });
-        console.log(`Dataset ${datasetId} has ${cleanItemCount} items`);
-        const numberOfBatches = Math.ceil(cleanItemCount / batchSizeLoad);
-
-        const requestInfoArr = [];
-        for (let i = 0; i < numberOfBatches; i++) {
-            requestInfoArr.push({
-                index: i,
-                offset: i * batchSizeLoad,
-            });
+        if (!pushState[datasetId]) {
+            pushState[datasetId] = {};
         }
-
-        // eslint-disable-next-line no-loop-func
-        await Promise.map(requestInfoArr, async (requestInfoObj) => {
-            const { items } = await Apify.client.datasets.getItems({
-                datasetId,
-                offset: requestInfoObj.offset,
-                limit: batchSizeLoad,
-                fields: doPush ? null : fields, // If we doPush, we want the full items, otherwise we take just the fields for speed
-            });
-
-            totalLoadedPerDataset += items.length;
-            totalLoaded += items.length;
-
-            console.log(
-                `Items loaded from dataset ${datasetId}: ${items.length}, offset: ${requestInfoObj.offset},
-        total loaded from dataset ${datasetId}: ${totalLoadedPerDataset},
-        total loaded: ${totalLoaded}`,
-            );
-
-
-            for (const item of items) {
-                const key = fields.map((field) => item[field]).join('');
-                if (!dedupMap.has(key)) {
-                    dedupMap.set(key, item);
-                }
-            }
-        }, { concurrency: parallelLoads });
     }
-    console.log(`Loading took ${Math.round((Date.now() - loadStart) / 1000)} seconds`);
-
-    const valuesStart = Date.now();
-    const dedupedItems = dedupMap.entries();
-    console.log(`Turning Map into values took ${Math.round((Date.now() - valuesStart) / 1000)} seconds`);
-    console.log(`Total loaded: ${totalLoaded}, Total unique: ${dedupedItems.length}`);
 
     const outputDataset = await Apify.openDataset(outputDatasetId);
-    let isMigrating = false;
-    Apify.events.on('migrating', () => {
-        isMigrating = true;
-    });
 
-    let pushedItems = (await Apify.getValue('PUSHED')) || 0;
-    const pushedKeys = (await Apify.getValue('PUSHED-KEYS')) || {};
+    const dedupSet = new BigSet();
 
-    // Now we push from the whole BigMap
-    if (doPush) {
-        for (let i = pushedItems; i < dedupedItems.length; i += uploadBatchSize) {
-            if (isMigrating) {
-                console.log('Forever sleeping until migration');
-                // Do nothing
-                await new Promise(() => {});
-            }
-            const slice = dedupedEntries.slice(i, i + uploadBatchSize);
-            const filteredSlice = slice.filter(([key, value]) => pushedKeys[key] !== true);
-            const keys = filteredSlice.map(([key, value]) => key);
-            const values = filteredSlice.map(([key, value]) => value);
-            for (const key of keys) {
-                pushedKeys[key] = true;
-            }
-            await outputDataset.pushData(values);
-            pushedItems += values.length;
-            await Apify.setValue('PUSHED', pushedItems);
-            await Apify.setValue('PUSHED-KEYS', pushedKeys);
-            const { itemCount } = await outputDataset.getInfo();
-            console.log(`Pushed total: ${pushedItems}, In dataset (delayed): ${itemCount}`);
-            await Apify.utils.sleep(uploadSleepMs);
+    // We call this on every new batch of items
+    const processFn = async (items, { datasetId, datasetOffset }) => {
+        // We always process the whole batch but we push only those that were not pushed
+        // The order inside a single batch is stable so we can do that
+        const outputItems = dedup({ items, output, fields, dedupSet });
+        log.info(`[Batch-${datasetId}-${datasetOffset}]: Loaded: ${items.length}, Total unique: ${dedupSet.size}`);
+
+        if (typeof pushState[datasetId][datasetOffset] !== 'number') {
+            pushState[datasetId][datasetOffset] = 0;
         }
+
+        const pushConfig = {
+            pushState,
+            datasetId,
+            datasetOffset,
+        };
+
+        await persistedPush({ outputItems, uploadBatchSize, output, outputDataset, uploadSleepMs, ...pushConfig });
+    };
+
+    const processFnNoPush = async (items, { datasetId, datasetOffset }) => {
+        dedup({ items, output: 'nothing', fields, dedupSet });
+        log.info(`[Batch-${datasetId}-${datasetOffset}]: Loaded: ${items.length}, Total unique: ${dedupSet.size}`);
+    };
+
+    if (datasetIdsOfFilterItems) {
+        await loadDatasetItemsInParallel(
+            datasetIdsOfFilterItems,
+            {
+                fields,
+                batchSize: batchSizeLoad,
+                parallelLoads,
+                debugLog: true,
+                processFn: processFnNoPush,
+            },
+        );
     }
-}
+
+    await loadDatasetItemsInParallel(
+        datasetIds,
+        {
+            batchSize: batchSizeLoad,
+            parallelLoads,
+            debugLog: true,
+            processFn,
+            // TODO: Implement smart Set persistence, probably split every 100k of Set keys into single KV record
+            // persistLoadingStateForProcesFn: true,
+        },
+    );
+};

@@ -6,6 +6,7 @@
 		"@types/bluebird": "^3.5.30",
 		"apify": "^0.20.3",
 		"big-map-simple": "^2.0.0",
+		"big-set": "^1.0.2",
 		"bluebird": "^3.7.2"
 	},
 	"scripts": {

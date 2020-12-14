@@ -11,8 +11,6 @@ Apify.main(async () => {
 
     const {
         datasetIds,
-        outputUniques = true,
-        outputDuplicates = false,
         fields,
         outputDatasetId,
         uploadSleepMs = 5000,
@@ -21,6 +19,10 @@ Apify.main(async () => {
         parallelLoads = 1,
         mode = 'dedup-after-load',
         output = 'unique-items',
+        // Items from these datasets will be used only to dedup against
+        // Will automatically just load fields needed for dedup
+        // These datasets needs to be loaded before the outputing datasets
+        datasetIdsOfFilterItems,
     } = input;
 
     if (!(Array.isArray(datasetIds) && datasetIds.length > 0)) {
@@ -31,16 +33,35 @@ Apify.main(async () => {
         throw new Error('WRONG INPUT --- Missing fields!');
     }
 
-    if (outputUniques && outputDuplicates) {
-        throw new Error('WRONG INPUT --- Choose only one of outputUnique or outputDuplicates');
+    if (!['unique-items', 'duplicate-items', 'nothing'].includes(output)) {
+        throw new Error('WRONG INPUT --- output has to be one of ["unique-items", "duplicate-items", "nothing"]');
     }
 
-    const context = { datasetIds, batchSizeLoad, output, fields, parallelLoads, outputDatasetId, uploadBatchSize, uploadSleepMs };
+    if (!['dedup-after-load', 'dedup-as-loading'].includes(mode)) {
+        throw new Error('WRONG INPUT --- output has to be one of ["dedup-after-load", "dedup-as-loading"]');
+    }
+
+    const pushState = (await Apify.getValue('PUSHED')) || {};
+    Apify.events.on('persistState', async () => {
+        await Apify.setValue('PUSHED', pushState);
+    });
+
+    const context = {
+        datasetIds,
+        batchSizeLoad,
+        output,
+        fields,
+        parallelLoads,
+        outputDatasetId,
+        uploadBatchSize,
+        uploadSleepMs,
+        datasetIdsOfFilterItems,
+        pushState,
+    };
 
     if (mode === 'dedup-after-load') {
         await dedupAfterLoadFn(context);
     } else if (mode === 'dedup-as-loading') {
-        // This path is not working yet
         await dedupAsLoadingFn(context);
     }
 });
