@@ -58,6 +58,12 @@
             "type": "integer",
             "description": "How many items it should upload in one pushData call. Useful to not overload Apify API.",
             "default": 5000
+        },
+        "datasetIdsOfFilterItems": {
+            "title": "Dataset IDs for just deduping",
+            "type": "array",
+            "description": "The items from these datasets will be just used as a dedup filter for the main datasets. These items are loaded first and then the main datasets are compared for uniqueness and pushed.",
+            "editor": "stringList"
         }
     }
 }
