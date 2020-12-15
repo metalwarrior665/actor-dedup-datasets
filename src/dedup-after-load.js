@@ -53,7 +53,7 @@ module.exports = async ({
         },
     );
 
-    const outputItems = dedup({ items, output, fields });
+    const outputItems = dedup({ items, output, fields, dedupSet });
     log.info(`Total loaded: ${items.length}, Total unique: ${outputItems.size}, Total duplicates: ${items.length - outputItems.size}`);
 
     log.info(`Going to push ${outputItems.length - pushState.pushedItemsCount} pending, ${outputItems.length} total`);
