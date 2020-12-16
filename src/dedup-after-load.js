@@ -17,6 +17,7 @@ module.exports = async ({
     uploadSleepMs,
     datasetIdsOfFilterItems,
     pushState,
+    outputTo,
 }) => {
     const dedupSet = new BigSet();
 
@@ -54,10 +55,10 @@ module.exports = async ({
     );
 
     const outputItems = dedup({ items, output, fields, dedupSet });
-    log.info(`Total loaded: ${items.length}, Total unique: ${outputItems.size}, Total duplicates: ${items.length - outputItems.size}`);
+    log.info(`Total loaded: ${items.length}, Total unique: ${dedupSet.size}, Total duplicates: ${items.length - dedupSet.size}`);
 
     log.info(`Going to push ${outputItems.length - pushState.pushedItemsCount} pending, ${outputItems.length} total`);
 
     const outputDataset = await Apify.openDataset(outputDatasetId);
-    await persistedPush({ outputItems, pushState, uploadBatchSize, output, outputDataset, uploadSleepMs });
+    await persistedPush({ outputItems, pushState, uploadBatchSize, output, outputDataset, uploadSleepMs, outputTo });
 };

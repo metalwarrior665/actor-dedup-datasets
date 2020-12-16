@@ -34,6 +34,15 @@
             "enum": ["dedup-after-load", "dedup-as-loading"],
             "enumTitles": ["Dedup after load (high memory use, keeps the order of items)", "Dedup as loading (low memory, no order, experimental!!!)"]
         },
+        "outputTo": {
+            "title": "Where to output",
+            "type": "string",
+            "description": "Either can output to a single dataset or to split data into KV records depending on upload batch size. KV is upload is much faster but data end up in many files.",
+            "editor": "select",
+            "default": "unique-items",
+            "enum": ["dataset", "key-value-store"],
+            "enumTitles": ["Dataset", "Key-Value Store (split into records)"]
+        },
         "outputDatasetId": {
             "title": "Output dataset ID (optional)",
             "type": "string",
@@ -48,15 +57,15 @@
             "maximum": 100
         },
         "uploadSleepMs": {
-            "title": "Upload sleep ms",
+            "title": "Dataset upload sleep ms",
             "type": "integer",
-            "description": "How long it should wait between each batch when uploading. Useful to not overload Apify API.",
+            "description": "How long it should wait between each batch when uploading. Useful to not overload Apify API. Only important for dataset upload.",
             "default": 5000
         },
         "uploadBatchSize": {
             "title": "Upload batch size",
             "type": "integer",
-            "description": "How many items it should upload in one pushData call. Useful to not overload Apify API.",
+            "description": "How many items it should upload in one pushData call. Useful to not overload Apify API. Only important for dataset upload.",
             "default": 5000
         },
         "datasetIdsOfFilterItems": {

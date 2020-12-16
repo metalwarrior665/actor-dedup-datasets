@@ -19,6 +19,7 @@ module.exports = async ({
     uploadSleepMs,
     datasetIdsOfFilterItems,
     pushState,
+    outputTo,
 }) => {
     // We fill the state with datasetId object in the start to keep track of each dataset/offset batches
     for (const datasetId of datasetIds) {
@@ -48,7 +49,7 @@ module.exports = async ({
             datasetOffset,
         };
 
-        await persistedPush({ outputItems, uploadBatchSize, output, outputDataset, uploadSleepMs, ...pushConfig });
+        await persistedPush({ outputItems, uploadBatchSize, output, outputDataset, uploadSleepMs, ...pushConfig, outputTo });
     };
 
     const processFnNoPush = async (items, { datasetId, datasetOffset }) => {

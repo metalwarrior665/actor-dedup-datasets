@@ -19,6 +19,7 @@ Apify.main(async () => {
         parallelLoads = 1,
         mode = 'dedup-after-load',
         output = 'unique-items',
+        outputTo = 'dataset',
         // Items from these datasets will be used only to dedup against
         // Will automatically just load fields needed for dedup
         // These datasets needs to be loaded before the outputing datasets
@@ -38,7 +39,11 @@ Apify.main(async () => {
     }
 
     if (!['dedup-after-load', 'dedup-as-loading'].includes(mode)) {
-        throw new Error('WRONG INPUT --- output has to be one of ["dedup-after-load", "dedup-as-loading"]');
+        throw new Error('WRONG INPUT --- mode has to be one of ["dedup-after-load", "dedup-as-loading"]');
+    }
+
+    if (!['dataset', 'key-value-store'].includes(outputTo)) {
+        throw new Error('WRONG INPUT --- outputTo has to be one of ["dataset", "key-value-store"]');
     }
 
     const pushState = (await Apify.getValue('PUSHED')) || {};
@@ -55,6 +60,7 @@ Apify.main(async () => {
         outputDatasetId,
         uploadBatchSize,
         uploadSleepMs,
+        outputTo,
         datasetIdsOfFilterItems,
         pushState,
     };
@@ -64,4 +70,6 @@ Apify.main(async () => {
     } else if (mode === 'dedup-as-loading') {
         await dedupAsLoadingFn(context);
     }
+
+    await Apify.setValue('PUSHED', pushState);
 });

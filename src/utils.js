@@ -4,7 +4,7 @@ const { log } = Apify.utils;
 
 // dedupSet is only present as param when called from dedup-as-loading
 module.exports.dedup = ({ items, output, fields, dedupSet }) => {
-    const dedupStart = Date.now();
+    // const dedupStart = Date.now();
 
     const outputItems = [];
     for (const item of items) {
@@ -36,20 +36,25 @@ module.exports.persistedPush = async ({
     output,
     uploadSleepMs,
     pushState,
-    // These 2 fields are for dedup-as-loading
     datasetId,
     datasetOffset,
+    // Only for KVs
+    outputTo,
 }) => {
     let isMigrating = false;
     Apify.events.on('migrating', () => {
         isMigrating = true;
     });
 
+    // Or it is push as loading
+    const isPushAfterLoad = typeof pushState.pushedItemsCount === 'number';
+
     // Now we push from the whole BigMap
     if (output !== 'nothing') {
         // We start pushing where we left the state (if migrated)
         // Everything is always in the same order so we can use just a single index
-        const pushedItemsCount = datasetId ? pushState[datasetId][datasetOffset] : pushState.pushedItemsCount;
+
+        const pushedItemsCount = isPushAfterLoad ? pushState.pushedItemsCount : pushState[datasetId][datasetOffset];
         for (let i = pushedItemsCount; i < outputItems.length; i += uploadBatchSize) {
             if (isMigrating) {
                 log.warning('Forever sleeping until migration');
@@ -58,15 +63,22 @@ module.exports.persistedPush = async ({
             }
             const itemsToPush = outputItems.slice(i, i + uploadBatchSize);
 
-            await outputDataset.pushData(itemsToPush);
-            if (datasetId) {
+            if (outputTo === 'dataset') {
+                await outputDataset.pushData(itemsToPush);
+            } else if (outputTo === 'key-value-store') {
+                const iterationIndex = Math.floor(i / uploadBatchSize);
+                const recordKey = `OUPUT-${datasetId}-${datasetOffset}-${iterationIndex}`;
+                await Apify.setValue(recordKey, itemsToPush);
+            }
+
+            if (!isPushAfterLoad) {
                 // Means dedup as loading
                 pushState[datasetId][datasetOffset] = i + itemsToPush.length;
             } else {
                 pushState.pushedItemsCount = i + itemsToPush.length;
             }
-            const { itemCount } = await outputDataset.getInfo();
-            if (!datasetId) {
+            const itemCount = outputTo === 'dataset' ? (await outputDataset.getInfo().then((res) => res.itemCount)) : 'output in KV';
+            if (isPushAfterLoad) {
                 log.info(`Pushed total: ${i + itemsToPush.length}, In dataset (delayed): ${itemCount}`);
             } else {
                 log.info(`[Batch-${datasetId}-${datasetOffset}]: Pushed total: ${i + itemsToPush.length}, In dataset (delayed): ${itemCount}`);
