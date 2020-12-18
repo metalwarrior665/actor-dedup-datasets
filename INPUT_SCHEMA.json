@@ -39,7 +39,7 @@
             "type": "string",
             "description": "Either can output to a single dataset or to split data into KV records depending on upload batch size. KV is upload is much faster but data end up in many files.",
             "editor": "select",
-            "default": "unique-items",
+            "default": "dataset",
             "enum": ["dataset", "key-value-store"],
             "enumTitles": ["Dataset", "Key-Value Store (split into records)"]
         },
