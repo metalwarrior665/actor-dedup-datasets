@@ -8,7 +8,13 @@ module.exports.dedup = ({ items, output, fields, dedupSet }) => {
 
     const outputItems = [];
     for (const item of items) {
-        const key = fields.map((field) => item[field]).join('');
+        const key = fields
+            .map((field) => {
+                const value = item[field];
+                // For deep equal comparing
+                return typeof value === 'object' ? JSON.stringify(value) : value;
+            })
+            .join('');
         const hasKey = dedupSet.has(key);
         if (output === 'unique-items') {
             if (!hasKey) {
