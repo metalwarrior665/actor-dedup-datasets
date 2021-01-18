@@ -16,6 +16,8 @@ module.exports = async ({
     uploadBatchSize,
     uploadSleepMs,
     datasetIdsOfFilterItems,
+    preDedupTransformFn,
+    postDedupTransformFn,
     pushState,
     outputTo,
 }) => {
@@ -42,7 +44,7 @@ module.exports = async ({
         pushState.pushedItemsCount = 0;
     }
 
-    const items = await loadDatasetItemsInParallel(
+    let items = await loadDatasetItemsInParallel(
         datasetIds,
         {
             batchSize: batchSizeLoad,
@@ -54,7 +56,12 @@ module.exports = async ({
         },
     );
 
-    const outputItems = dedup({ items, output, fields, dedupSet });
+    items = preDedupTransformFn(items);
+
+    let outputItems = dedup({ items, output, fields, dedupSet });
+
+    outputItems = postDedupTransformFn(items);
+
     log.info(`Total loaded: ${items.length}, Total unique: ${dedupSet.size}, Total duplicates: ${items.length - dedupSet.size}`);
 
     log.info(`Going to push ${outputItems.length - pushState.pushedItemsCount} pending, ${outputItems.length} total`);

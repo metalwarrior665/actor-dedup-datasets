@@ -18,6 +18,8 @@ module.exports = async ({
     uploadBatchSize,
     uploadSleepMs,
     datasetIdsOfFilterItems,
+    preDedupTransformFn,
+    postDedupTransformFn,
     pushState,
     outputTo,
 }) => {
@@ -34,10 +36,13 @@ module.exports = async ({
 
     // We call this on every new batch of items
     const processFn = async (items, { datasetId, datasetOffset }) => {
+        items = preDedupTransformFn(items);
         // We always process the whole batch but we push only those that were not pushed
         // The order inside a single batch is stable so we can do that
-        const outputItems = dedup({ items, output, fields, dedupSet });
+        let outputItems = dedup({ items, output, fields, dedupSet });
         log.info(`[Batch-${datasetId}-${datasetOffset}]: Loaded: ${items.length}, Total unique: ${dedupSet.size}`);
+
+        outputItems = postDedupTransformFn(outputItems);
 
         if (typeof pushState[datasetId][datasetOffset] !== 'number') {
             pushState[datasetId][datasetOffset] = 0;
@@ -53,6 +58,7 @@ module.exports = async ({
     };
 
     const processFnNoPush = async (items, { datasetId, datasetOffset }) => {
+        items = preDedupTransformFn(items);
         dedup({ items, output: 'nothing', fields, dedupSet });
         log.info(`[Batch-${datasetId}-${datasetOffset}]: Loaded: ${items.length}, Total unique: ${dedupSet.size}`);
     };

@@ -1,6 +1,6 @@
 # Dedup datasets
 
-Deduplicates one or more datasets by a set of fields and merges them together into one dataset of unique items.
+Deduplicates one or more datasets by a set of fields and merges them together into one dataset of unique items. Can also be used to transform the data.
 
 ## Input
 - `datasetIds` \<Array\<String\>\> Datasets that should be deduplicated and merged. **Required**
@@ -9,3 +9,5 @@ Deduplicates one or more datasets by a set of fields and merges them together in
 - `outputDatasetId` \<String\> Optionally can push into non-default dataset.
 - `uploadSleepMs` \<Number\> How long it should wait between each batch when uploading. Useful to not overload Apify API. **Default**: `5000`
 - `uploadBatchSize` \<Number\> How many items it should upload in one pushData call. Useful to not overload Apify API. **Default**: `2000`
+
+To be updated!

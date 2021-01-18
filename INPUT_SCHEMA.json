@@ -73,6 +73,20 @@
             "type": "array",
             "description": "The items from these datasets will be just used as a dedup filter for the main datasets. These items are loaded first and then the main datasets are compared for uniqueness and pushed.",
             "editor": "stringList"
+        },
+        "preDedupTransformFunction": {
+            "title": "Pre dedup transform function",
+            "type": "string",
+            "description": "Function to transform items before deduplication is applied. For 'dedup-after-load' mode this is done for all items at once. For 'dedup-as-loading' this is applied to each batch separately.",
+            "editor": "javascript",
+            "prefill": "(items) => {\n    return items;\n}"
+        },
+        "postDedupTransformFunction": {
+            "title": "Post dedup transform function",
+            "type": "string",
+            "description": "Function to transform items after deduplication is applied. For 'dedup-after-load' mode this is done for all items at once. For 'dedup-as-loading' this is applied to each batch separately.",
+            "editor": "javascript",
+            "prefill": "(items) => {\n    return items;\n}"
         }
     }
 }

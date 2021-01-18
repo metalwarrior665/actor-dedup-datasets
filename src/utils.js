@@ -73,7 +73,9 @@ module.exports.persistedPush = async ({
                 await outputDataset.pushData(itemsToPush);
             } else if (outputTo === 'key-value-store') {
                 const iterationIndex = Math.floor(i / uploadBatchSize);
-                const recordKey = `OUTPUT-${datasetId}-${datasetOffset}-${iterationIndex}`;
+                const datasetIdString = datasetId ? `-${datasetId}` : '';
+                const datasetOffsetString = datasetOffset ? `-${datasetOffset}` : '';
+                const recordKey = `OUTPUT${datasetIdString}${datasetOffsetString}-${iterationIndex}`;
                 await Apify.setValue(recordKey, itemsToPush);
             }
 
