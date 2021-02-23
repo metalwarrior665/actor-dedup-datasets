@@ -60,7 +60,7 @@ module.exports = async ({
 
     let outputItems = dedup({ items, output, fields, dedupSet });
 
-    outputItems = postDedupTransformFn(items);
+    outputItems = postDedupTransformFn(outputItems);
 
     log.info(`Total loaded: ${items.length}, Total unique: ${dedupSet.size}, Total duplicates: ${items.length - dedupSet.size}`);
 

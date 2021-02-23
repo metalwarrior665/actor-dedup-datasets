@@ -47,6 +47,8 @@ module.exports.loadDatasetItemsInParallel = async (datasetIds, options = {}) => 
         persistLoadingStateForProcesFn = false,
     } = options;
 
+    const client = Apify.newClient();
+
     const loadStart = Date.now();
 
     // Returns either null if offset/limit does not fit the current chunk
@@ -103,7 +105,7 @@ module.exports.loadDatasetItemsInParallel = async (datasetIds, options = {}) => 
                 processFnLoadingState[datasetId] = {};
             }
             // We get the number of items first and then we precreate request info objects
-            const { cleanItemCount } = await Apify.client.datasets.getDataset({ datasetId });
+            const { cleanItemCount } = await client.dataset(datasetId).get();
             if (debugLog) console.log(`Dataset ${datasetId} has ${cleanItemCount} items`);
             const numberOfBatches = Math.ceil(cleanItemCount / batchSize);
 
@@ -158,8 +160,7 @@ module.exports.loadDatasetItemsInParallel = async (datasetIds, options = {}) => 
     //  Now we execute all the requests in parallel (with defined concurrency)
     await Promise.map(requestInfoArr, async (requestInfoObj) => {
         const { index, datasetId, datasetIndex } = requestInfoObj;
-        const { items } = await Apify.client.datasets.getItems({
-            datasetId,
+        const { items } = await client.dataset(datasetId).listItems({
             offset: requestInfoObj.offset,
             limit: requestInfoObj.limit,
             fields,
