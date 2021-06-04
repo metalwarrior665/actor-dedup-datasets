@@ -56,6 +56,13 @@
             "default": 10,
             "maximum": 100
         },
+        "parallelPushes": {
+            "title": "Parallel pushes",
+            "type": "integer",
+            "description": "Deduped data can be pushed in parallel batches to speed things up if needed. Be careful of increasing this as it can introduce performance issues that might lead to duplicates or data corruption.",
+            "default": 1,
+            "maximum": 20
+        },
         "uploadSleepMs": {
             "title": "Dataset upload sleep ms",
             "type": "integer",

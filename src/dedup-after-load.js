@@ -12,6 +12,7 @@ module.exports = async ({
     output,
     fields,
     parallelLoads,
+    parallelPushes,
     outputDatasetId,
     uploadBatchSize,
     uploadSleepMs,
@@ -67,5 +68,5 @@ module.exports = async ({
     log.info(`Going to push ${outputItems.length - pushState.pushedItemsCount} pending, ${outputItems.length} total`);
 
     const outputDataset = await Apify.openDataset(outputDatasetId);
-    await persistedPush({ outputItems, pushState, uploadBatchSize, output, outputDataset, uploadSleepMs, outputTo });
+    await persistedPush({ outputItems, parallelPushes, pushState, uploadBatchSize, output, outputDataset, uploadSleepMs, outputTo });
 };

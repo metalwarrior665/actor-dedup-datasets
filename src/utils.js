@@ -2,7 +2,6 @@ const Apify = require('apify');
 
 const { log } = Apify.utils;
 
-// dedupSet is only present as param when called from dedup-as-loading
 module.exports.dedup = ({ items, output, fields, dedupSet }) => {
     // const dedupStart = Date.now();
 
@@ -37,6 +36,7 @@ module.exports.dedup = ({ items, output, fields, dedupSet }) => {
 
 module.exports.persistedPush = async ({
     outputItems,
+    parallelPushes,
     uploadBatchSize,
     outputDataset,
     output,
@@ -70,7 +70,17 @@ module.exports.persistedPush = async ({
             const itemsToPush = outputItems.slice(i, i + uploadBatchSize);
 
             if (outputTo === 'dataset') {
-                await outputDataset.pushData(itemsToPush);
+                // We enable doing more pushes in parallel inside a single batch
+                // This doesn't affect the state at all, only speeds up the batch upload
+                const pushPromises = [];
+                const parallelizedBatchSize = Math.ceil(itemsToPush.length / parallelPushes);
+                for (let i = 0; i < parallelPushes; i++) {
+                    const start = i * parallelizedBatchSize;
+                    const end = (i + 1) * parallelizedBatchSize;
+                    const parallelPushChunk = itemsToPush.slice(start, end);
+                    pushPromises.push(outputDataset.pushData(parallelPushChunk));
+                }
+                await Promise.all(pushPromises);
             } else if (outputTo === 'key-value-store') {
                 const iterationIndex = Math.floor(i / uploadBatchSize);
                 const datasetIdString = datasetId ? `-${datasetId}` : '';
