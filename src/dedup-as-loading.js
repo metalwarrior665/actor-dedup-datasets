@@ -8,6 +8,13 @@ const { log } = Apify.utils;
 
 // Here we dedup&push as we load the batches.
 // Note that high concurrency can overload the dataset and introduce duplicates (due to bug in dataset backend)
+
+// WARNING: This has a bug!
+// The deduped keys are not stored anywhere so
+// after migration we can be loading the items in different order
+// which means that we will see different duplicates first
+// leading to push of duplicates
+// The solution is to persist the Set of dedup keys as well
 module.exports = async ({
     datasetIds,
     batchSizeLoad,
