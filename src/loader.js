@@ -164,6 +164,7 @@ module.exports.loadDatasetItemsInParallel = async (datasetIds, options = {}) => 
             offset: requestInfoObj.offset,
             limit: requestInfoObj.limit,
             fields,
+            clean: true,
         });
 
         if (!totalLoadedPerDataset[datasetId]) {
