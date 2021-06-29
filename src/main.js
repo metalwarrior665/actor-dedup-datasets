@@ -4,6 +4,7 @@ const Apify = require('apify');
 const dedupAfterLoadFn = require('./dedup-after-load');
 const dedupAsLoadingFn = require('./dedup-as-loading');
 const { validateInput } = require('./input');
+const { betterSetInterval } = require('./utils');
 
 Apify.main(async () => {
     // Get input of your actor
@@ -40,9 +41,9 @@ Apify.main(async () => {
     // Once we are migrating, we save the push state very often
     // to increase the chance of having the latest state
     const migrationCallback = () => {
-        setInterval(async () => {
+        betterSetInterval(async () => {
             await Apify.setValue('PUSHED', pushState);
-        }, 1000);
+        }, 300);
     }    
     Apify.events.on('migrating', migrationCallback);
     Apify.events.on('aborting', migrationCallback);

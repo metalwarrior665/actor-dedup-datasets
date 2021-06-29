@@ -2,6 +2,17 @@ const Apify = require('apify');
 
 const { log } = Apify.utils;
 
+// We don't care about clearing it here
+module.exports.betterSetInterval = (func, delay) => {
+    const funcWrapper = function () {
+        func(callback);
+    };
+    callback = function () {
+        setTimeout(funcWrapper, delay);
+    };
+    funcWrapper();
+}
+
 module.exports.dedup = ({ items, output, fields, dedupSet }) => {
     // const dedupStart = Date.now();
 
