@@ -61,7 +61,6 @@ Apify.main(async () => {
     if (mode === 'dedup-after-load') {
         await dedupAfterLoadFn(context);
     } else if (mode === 'dedup-as-loading') {
-        // WARNING: This is currently buggy, more details inside!
         await dedupAsLoadingFn(context);
     }
 

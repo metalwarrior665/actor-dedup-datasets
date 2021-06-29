@@ -1,26 +1,20 @@
 const Apify = require('apify');
-const BigSet = require('big-set');
 
 const { loadDatasetItemsInParallel } = require('./loader');
 const { persistedPush, dedup } = require('./utils');
+const { createParallelPersistedSet } = require('./persisted-set');
 
 const { log } = Apify.utils;
 
 // Here we dedup&push as we load the batches.
 // Note that high concurrency can overload the dataset and introduce duplicates (due to bug in dataset backend)
-
-// WARNING: This has a bug!
-// The deduped keys are not stored anywhere so
-// after migration we can be loading the items in different order
-// which means that we will see different duplicates first
-// leading to push of duplicates
-// The solution is to persist the Set of dedup keys as well
 module.exports = async ({
     datasetIds,
     batchSizeLoad,
     output,
     fields,
     parallelLoads,
+    parallelPushes,
     outputDatasetId,
     uploadBatchSize,
     uploadSleepMs,
@@ -39,7 +33,12 @@ module.exports = async ({
 
     const outputDataset = await Apify.openDataset(outputDatasetId);
 
-    const dedupSet = new BigSet();
+    // This ensures we keep unique dedup set for each actor run
+    const fixedDate = (await Apify.getValue('FIXED-DATE')) || Date.now();
+    await Apify.setValue('FIXED-DATE', fixedDate);
+    const dedupSetDatasetName = `TEMPORARY-DEDUP-${fixedDate}`;
+    // We never read because we don't use the parallel part
+    const dedupSet = await createParallelPersistedSet(dedupSetDatasetName, { readSyncIntervalMs: 999999999 });
 
     // We call this on every new batch of items
     const processFn = async (items, { datasetId, datasetOffset }) => {
@@ -47,7 +46,7 @@ module.exports = async ({
         // We always process the whole batch but we push only those that were not pushed
         // The order inside a single batch is stable so we can do that
         let outputItems = dedup({ items, output, fields, dedupSet });
-        log.info(`[Batch-${datasetId}-${datasetOffset}]: Loaded: ${items.length}, Total unique: ${dedupSet.size}`);
+        log.info(`[Batch-${datasetId}-${datasetOffset}]: Loaded: ${items.length}, Total unique: ${dedupSet.size()}`);
 
         outputItems = postDedupTransformFn(outputItems);
 
@@ -61,13 +60,22 @@ module.exports = async ({
             datasetOffset,
         };
 
-        await persistedPush({ outputItems, uploadBatchSize, output, outputDataset, uploadSleepMs, ...pushConfig, outputTo });
+        await persistedPush({
+            parallelPushes,
+            outputItems,
+            uploadBatchSize,
+            output,
+            outputDataset,
+            uploadSleepMs,
+            ...pushConfig,
+            outputTo,
+        });
     };
 
     const processFnNoPush = async (items, { datasetId, datasetOffset }) => {
         items = preDedupTransformFn(items);
         dedup({ items, output: 'nothing', fields, dedupSet });
-        log.info(`[Batch-${datasetId}-${datasetOffset}]: Loaded: ${items.length}, Total unique: ${dedupSet.size}`);
+        log.info(`[Batch-${datasetId}-${datasetOffset}]: Loaded: ${items.length}, Total unique: ${dedupSet.size()}`);
     };
 
     if (datasetIdsOfFilterItems) {
@@ -90,8 +98,10 @@ module.exports = async ({
             parallelLoads,
             debugLog: true,
             processFn,
-            // TODO: Implement smart Set persistence, probably split every 100k of Set keys into single KV record
-            // persistLoadingStateForProcesFn: true,
+            persistLoadingStateForProcesFn: true,
         },
     );
+
+    const dedupDataset = await Apify.openDataset(dedupSetDatasetName);
+    await dedupDataset.drop();
 };

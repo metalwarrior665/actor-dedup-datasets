@@ -1,39 +1,43 @@
 const Apify = require('apify');
-const Promise = require('bluebird');
+const bluebird = require('bluebird');
+
+const { log } = Apify.utils;
 
 // Copied from https://github.com/metalwarrior665/apify-utils/blob/master/copy-paste/storage.js
 // TODO: replace with a library version when it is created
 
 /**
-* Loads items from one or many datasets in parallel by chunking the items from each dataset into batches,
-* retaining order of both items and datasets. Useful for large loads.
-* By default returns one array of items in order of datasets provided.
-* By changing concatItems or concatDatasets options, you can get array of arrays (of arrays) back
-* Requires bluebird dependency and copy calculateLocalOffsetLimit function!!!
-*
-* @param {string[]} datasetIds IDs of datasets you want to load
-* @param {object} options Options with default values.
-* If both concatItems and concatDatasets are false, output of this function is an array of datasets containing arrays of batches containig array of items.
-* concatItems concats all batches of one dataset into one array of items.
-* concatDatasets concat all datasets into one array of batches
-* Using both concatItems and concatDatasets gives you back a sinlge array of all items in order.
-* Both are true by default.
-* @param {Function} options.processFn - Data are not returned by fed to the supplied async function on the fly (reduces memory usage)
-* @param {number} options.parallelLoads
-* @param {number} options.batchSize
-* @param {number} options.offset=0
-* @param {number} options.limit=999999999
-* @param {boolean} options.concatItems
-* @param {boolean} options.concatDatasets
-* @param {boolean} options.fields
-* @param {boolean} options.debugLog
-* @param {boolean} options.persistLoadingStateForProcesFn=false
-* Will not load batches that were already processed before migration, does nothing if processFn is not used.
-* It does not persist the state inside processFn, that is a responsibillity of the caller (if needed)
-* You must not manipulate input parameters (and underlying datasets) between migrations or this will break
-*/
-
-module.exports.loadDatasetItemsInParallel = async (datasetIds, options = {}) => {
+ * Loads items from one or many datasets in parallel by chunking the items from each dataset into batches,
+ * retaining order of both items and datasets. Useful for large loads.
+ * By default returns one array of items in order of datasets provided.
+ * By changing concatItems or concatDatasets options, you can get array of arrays (of arrays) back
+ * Requires bluebird dependency and copy calculateLocalOffsetLimit function!!!
+ *
+ * @param {string[]} datasetIds IDs or names of datasets you want to load
+ * @param {object} options Options with default values.
+ * If both concatItems and concatDatasets are false, output of this function is an array of datasets containing arrays
+ * of batches containig array of items.
+ * concatItems concats all batches of one dataset into one array of items.
+ * concatDatasets concat all datasets into one array of batches
+ * Using both concatItems and concatDatasets gives you back a sinlge array of all items in order.
+ * Both are true by default.
+ * @param {(items: any[], params: { datasetId: string, datasetOffset: number }) => Promise<void>} [options.processFn]
+ *  Data are not returned by fed to the supplied async function on the fly (reduces memory usage)
+ * @param {number} [options.parallelLoads]
+ * @param {number} [options.batchSize]
+ * @param {number} [options.offset=0]
+ * @param {number} [options.limit=999999999]
+ * @param {boolean} [options.concatItems]
+ * @param {boolean} [options.concatDatasets]
+ * @param {boolean} options.fields
+ * @param {boolean} options.useLocalDataset Datasets will be always loaded from Apify could, even locally
+ * @param {boolean} [options.debugLog]
+ * @param {boolean} [options.persistLoadingStateForProcesFn=false]
+ * Will not load batches that were already processed before migration, does nothing if processFn is not used.
+ * It does not persist the state inside processFn, that is a responsibillity of the caller (if needed)
+ * You must not manipulate input parameters (and underlying datasets) between migrations or this will break
+ */
+ module.exports.loadDatasetItemsInParallel = async (datasetIds, options = {}) => {
     const {
         processFn,
         parallelLoads = 20,
@@ -42,12 +46,16 @@ module.exports.loadDatasetItemsInParallel = async (datasetIds, options = {}) => 
         limit = 999999999,
         concatItems = true,
         concatDatasets = true,
-        fields,
         debugLog = false,
         persistLoadingStateForProcesFn = false,
+        fields,
+        // Figure out better name since this is useful for datasets by name on platform
+        useLocalDataset = false, // Will fetch/create datasets by id or name locally or on current account
     } = options;
 
-    const client = Apify.newClient();
+    if (!Apify.isAtHome() && fields) {
+        log.warning('loadDatasetItemsInParallel - fields option does not work on local datasets');
+    }
 
     const loadStart = Date.now();
 
@@ -76,7 +84,7 @@ module.exports.loadDatasetItemsInParallel = async (datasetIds, options = {}) => 
                 }
                 // Or it is inside the current batch and we slice it from the start (including whole batch)
                 return localEnd - offset;
-                // eslint-disable-next-line no-else-return
+            // eslint-disable-next-line no-else-return
             } else { // Consider (inputEnd < localEnd) Means limit ends inside current batch
                 if (offset < localStart) {
                     return inputEnd - localStart;
@@ -105,23 +113,33 @@ module.exports.loadDatasetItemsInParallel = async (datasetIds, options = {}) => 
                 processFnLoadingState[datasetId] = {};
             }
             // We get the number of items first and then we precreate request info objects
-            const { cleanItemCount } = await client.dataset(datasetId).get();
-            if (debugLog) console.log(`Dataset ${datasetId} has ${cleanItemCount} items`);
-            const numberOfBatches = Math.ceil(cleanItemCount / batchSize);
+            let itemCount;
+            if (useLocalDataset) {
+                const dataset = await Apify.openDataset(datasetId);
+                itemCount = await dataset.getInfo().then((res) => res.itemCount);
+            } else {
+                itemCount = await Apify.newClient().dataset(datasetId).get().then((res) => res.itemCount);
+            }
+            if (debugLog) {
+                log.info(`Dataset ${datasetId} has ${itemCount} items`);
+            }
+            const numberOfBatches = Math.ceil(itemCount / batchSize);
 
             for (let i = 0; i < numberOfBatches; i++) {
                 const localOffsetLimit = calculateLocalOffsetLimit({ offset, limit, localStart: i * batchSize, batchSize });
                 if (!localOffsetLimit) {
-                    continue;
+                    continue; // eslint-disable-line no-continue
                 }
+
                 if (processFnLoadingState) {
                     if (!processFnLoadingState[datasetId][localOffsetLimit.offset]) {
                         processFnLoadingState[datasetId][localOffsetLimit.offset] = { done: false };
                     } else if (processFnLoadingState[datasetId][localOffsetLimit.offset].done) {
-                        console.log(`Batch for dataset ${datasetId}, offset: ${localOffsetLimit.offset} was already processed, skipping...`);
-                        continue;
+                        log.info(`Batch for dataset ${datasetId}, offset: ${localOffsetLimit.offset} was already processed, skipping...`);
+                        continue; // eslint-disable-line no-continue
                     }
                 }
+
                 requestInfoArr.push({
                     index: i,
                     offset: localOffsetLimit.offset,
@@ -155,17 +173,33 @@ module.exports.loadDatasetItemsInParallel = async (datasetIds, options = {}) => 
     }
 
     const requestInfoArr = await createRequestArray(processFnLoadingState);
-    if (debugLog) console.log(`Number of requests to do: ${requestInfoArr.length}`);
+    if (debugLog) {
+        log.info(`Number of requests to do: ${requestInfoArr.length}`);
+    }
 
     //  Now we execute all the requests in parallel (with defined concurrency)
-    await Promise.map(requestInfoArr, async (requestInfoObj) => {
+    await bluebird.map(requestInfoArr, async (requestInfoObj) => {
         const { index, datasetId, datasetIndex } = requestInfoObj;
-        const { items } = await client.dataset(datasetId).listItems({
+
+        const getDataOptions = {
             offset: requestInfoObj.offset,
             limit: requestInfoObj.limit,
             fields,
-            clean: true,
-        });
+        };
+        let items;
+        if (useLocalDataset) {
+            // This open should be cached
+            const dataset = await Apify.openDataset(datasetId);
+
+            if (!Apify.isAtHome()) {
+                delete getDataOptions.fields;
+            }
+            items = await dataset.getData(getDataOptions)
+                .then((res) => res.items);
+        } else {
+            items = await Apify.newClient().dataset(datasetId).listItems(getDataOptions)
+                .then((res) => res.items);
+        }
 
         if (!totalLoadedPerDataset[datasetId]) {
             totalLoadedPerDataset[datasetId] = 0;
@@ -175,10 +209,10 @@ module.exports.loadDatasetItemsInParallel = async (datasetIds, options = {}) => 
         totalLoaded += items.length;
 
         if (debugLog) {
-            console.log(
+            log.info(
                 `Items loaded from dataset ${datasetId}: ${items.length}, offset: ${requestInfoObj.offset},
-       total loaded from dataset ${datasetId}: ${totalLoadedPerDataset[datasetId]},
-       total loaded: ${totalLoaded}`,
+        total loaded from dataset ${datasetId}: ${totalLoadedPerDataset[datasetId]},
+        total loaded: ${totalLoaded}`,
             );
         }
         // We either collect the data or we process them on the fly
@@ -196,14 +230,16 @@ module.exports.loadDatasetItemsInParallel = async (datasetIds, options = {}) => 
         }
     }, { concurrency: parallelLoads });
 
-    if (debugLog) console.log(`Loading took ${Math.round((Date.now() - loadStart) / 1000)} seconds`);
+    if (debugLog) {
+        log.info(`Loading took ${Math.round((Date.now() - loadStart) / 1000)} seconds`);
+    }
 
     if (!processFn) {
         if (concatItems) {
             for (let i = 0; i < loadedBatchedArr.length; i++) {
                 /**
-                * @param {any} item
-                */
+                 * @param {any} item
+                 */
                 loadedBatchedArr[i] = loadedBatchedArr[i].flatMap((item) => item);
             }
         }

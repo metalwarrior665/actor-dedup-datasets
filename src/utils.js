@@ -51,6 +51,9 @@ module.exports.persistedPush = async ({
     Apify.events.on('migrating', () => {
         isMigrating = true;
     });
+    Apify.events.on('aborting', () => {
+        isMigrating = true;
+    });
 
     // Or it is push as loading
     const isPushAfterLoad = typeof pushState.pushedItemsCount === 'number';
