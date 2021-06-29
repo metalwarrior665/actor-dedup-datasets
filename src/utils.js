@@ -72,6 +72,15 @@ module.exports.persistedPush = async ({
             }
             const itemsToPush = outputItems.slice(i, i + uploadBatchSize);
 
+            const updatePushState = () => {
+                if (!isPushAfterLoad) {
+                    // Means dedup as loading
+                    pushState[datasetId][datasetOffset] = i + itemsToPush.length;
+                } else {
+                    pushState.pushedItemsCount = i + itemsToPush.length;
+                }
+            }
+
             if (outputTo === 'dataset') {
                 // We enable doing more pushes in parallel inside a single batch
                 // This doesn't affect the state at all, only speeds up the batch upload
@@ -83,27 +92,24 @@ module.exports.persistedPush = async ({
                     const parallelPushChunk = itemsToPush.slice(start, end);
                     pushPromises.push(outputDataset.pushData(parallelPushChunk));
                 }
+                // We must update it before this await because the push can take time
+                // and migration can cut us off
+                updatePushState();
                 await Promise.all(pushPromises);
             } else if (outputTo === 'key-value-store') {
                 const iterationIndex = Math.floor(i / uploadBatchSize);
                 const datasetIdString = datasetId ? `-${datasetId}` : '';
                 const datasetOffsetString = datasetOffset ? `-${datasetOffset}` : '';
                 const recordKey = `OUTPUT${datasetIdString}${datasetOffsetString}-${iterationIndex}`;
+                updatePushState();
                 await Apify.setValue(recordKey, itemsToPush);
-            }
-
-            if (!isPushAfterLoad) {
-                // Means dedup as loading
-                pushState[datasetId][datasetOffset] = i + itemsToPush.length;
-            } else {
-                pushState.pushedItemsCount = i + itemsToPush.length;
             }
 
             const itemCount = outputTo === 'dataset' ? (await outputDataset.getInfo().then((res) => res.itemCount)) : 'output in KV';
             if (isPushAfterLoad) {
                 log.info(`Pushed total: ${i + itemsToPush.length}, In dataset (delayed): ${itemCount}`);
             } else {
-                log.info(`[Batch-${datasetId}-${datasetOffset}]: Pushed total: ${i + itemsToPush.length}, In dataset (delayed): ${itemCount}`);
+                log.info(`[Batch-${datasetId}-${datasetOffset}]: Pushed in batch: ${i + itemsToPush.length}/${outputItems.length}, In dataset (delayed): ${itemCount}`);
             }
             await Apify.utils.sleep(uploadSleepMs);
         }
