@@ -98,6 +98,7 @@ module.exports.persistedPush = async ({
             } else {
                 pushState.pushedItemsCount = i + itemsToPush.length;
             }
+
             const itemCount = outputTo === 'dataset' ? (await outputDataset.getInfo().then((res) => res.itemCount)) : 'output in KV';
             if (isPushAfterLoad) {
                 log.info(`Pushed total: ${i + itemsToPush.length}, In dataset (delayed): ${itemCount}`);

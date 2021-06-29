@@ -37,9 +37,15 @@ Apify.main(async () => {
     const postDedupTransformFn = eval(postDedupTransformFunction);
 
     const pushState = (await Apify.getValue('PUSHED')) || {};
-    Apify.events.on('persistState', async () => {
-        await Apify.setValue('PUSHED', pushState);
-    });
+    // Once we are migrating, we save the push state very often
+    // to increase the chance of having the latest state
+    const migrationCallback = () => {
+        setInterval(async () => {
+            await Apify.setValue('PUSHED', pushState);
+        }, 1000);
+    }    
+    Apify.events.on('migrating', migrationCallback);
+    Apify.events.on('aborting', migrationCallback);
 
     const context = {
         datasetIds,
@@ -63,6 +69,4 @@ Apify.main(async () => {
     } else if (mode === 'dedup-as-loading') {
         await dedupAsLoadingFn(context);
     }
-
-    await Apify.setValue('PUSHED', pushState);
 });
