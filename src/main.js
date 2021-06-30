@@ -73,4 +73,6 @@ Apify.main(async () => {
     } else if (mode === 'dedup-as-loading') {
         await dedupAsLoadingFn(context);
     }
+
+    await Apify.setValue('PUSHED', pushState);
 });
