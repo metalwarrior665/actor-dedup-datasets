@@ -17,5 +17,8 @@
 	},
 	"author": "It's not you it's me",
 	"license": "ISC",
-	"devDependencies": {}
+	"devDependencies": {
+		"@apify/eslint-config": "^0.1.4",
+		"eslint": "^7.29.0"
+	}
 }

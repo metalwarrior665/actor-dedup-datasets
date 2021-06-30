@@ -7,11 +7,11 @@ module.exports.betterSetInterval = (func, delay) => {
     const funcWrapper = function () {
         func(callback);
     };
-    callback = function () {
+    const callback = function () {
         setTimeout(funcWrapper, delay);
     };
     funcWrapper();
-}
+};
 
 module.exports.dedup = ({ items, output, fields, dedupSet }) => {
     // const dedupStart = Date.now();
@@ -75,6 +75,10 @@ module.exports.persistedPush = async ({
         // Everything is always in the same order so we can use just a single index
 
         const pushedItemsCount = isPushAfterLoad ? pushState.pushedItemsCount : pushState[datasetId][datasetOffset];
+        if (!isPushAfterLoad) {
+            log.info(`[Batch-${datasetId}-${datasetOffset}]: `
+                + `Starting to push: ${pushedItemsCount}/${outputItems.length} was already pushed before restarting`);
+        }
         for (let i = pushedItemsCount; i < outputItems.length; i += uploadBatchSize) {
             if (isMigrating) {
                 log.warning('Forever sleeping until migration');
@@ -90,7 +94,7 @@ module.exports.persistedPush = async ({
                 } else {
                     pushState.pushedItemsCount = i + itemsToPush.length;
                 }
-            }
+            };
 
             if (outputTo === 'dataset') {
                 // We enable doing more pushes in parallel inside a single batch
@@ -120,7 +124,8 @@ module.exports.persistedPush = async ({
             if (isPushAfterLoad) {
                 log.info(`Pushed total: ${i + itemsToPush.length}, In dataset (delayed): ${itemCount}`);
             } else {
-                log.info(`[Batch-${datasetId}-${datasetOffset}]: Pushed in batch: ${i + itemsToPush.length}/${outputItems.length}, In dataset (delayed): ${itemCount}`);
+                log.info(`[Batch-${datasetId}-${datasetOffset}]: `
+                    + `Pushed in batch: ${i + itemsToPush.length}/${outputItems.length}, In dataset (delayed): ${itemCount}`);
             }
             await Apify.utils.sleep(uploadSleepMs);
         }
