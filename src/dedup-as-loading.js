@@ -45,9 +45,7 @@ module.exports = async ({
         items = preDedupTransformFn(items);
         // We always process the whole batch but we push only those that were not pushed
         // The order inside a single batch is stable so we can do that
-        console.log(`Prededup items: ${items.length}`);
         let outputItems = dedup({ items, output, fields, dedupSet });
-        console.log(`Postdedup items: ${items.length}`);
 
         log.info(`[Batch-${datasetId}-${datasetOffset}]: Loaded: ${items.length}, Total unique: ${dedupSet.size()}`);
 
@@ -62,6 +60,7 @@ module.exports = async ({
             datasetId,
             datasetOffset,
         };
+        console.log(`Starting persistedPush with ${outputItems.length}`);
 
         await persistedPush({
             parallelPushes,

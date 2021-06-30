@@ -67,7 +67,7 @@ module.exports.persistedPush = async ({
     });
 
     // Or it is push as loading
-    const isPushAfterLoad = typeof pushState.pushedItemsCount === 'number';
+    const isPushAfterLoad = typeof pushState.pushedItemsCount === 'number'
 
     // Now we push from the whole BigMap
     if (output !== 'nothing') {
@@ -75,6 +75,8 @@ module.exports.persistedPush = async ({
         // Everything is always in the same order so we can use just a single index
 
         const pushedItemsCount = isPushAfterLoad ? pushState.pushedItemsCount : pushState[datasetId][datasetOffset];
+        console.log(`Inside persistedPush with ${outputItems.length}, pushedItemsCount: ${pushedItemsCount}`);
+
         if (!isPushAfterLoad) {
             log.info(`[Batch-${datasetId}-${datasetOffset}]: `
                 + `Starting to push: ${pushedItemsCount}/${outputItems.length} was already pushed before restarting`);
