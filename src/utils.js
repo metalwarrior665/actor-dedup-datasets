@@ -87,7 +87,7 @@ module.exports.persistedPush = async ({
         }
         for (let i = pushedItemsCount; i < outputItems.length; i += uploadBatchSize) {
             if (isMigrating) {
-                log.warning('Forever sleeping until migration');
+                log.warning('Actor migration is in process, no more data will be pushed in this batch');
                 // Do nothing
                 await new Promise(() => {});
             }

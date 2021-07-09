@@ -60,7 +60,6 @@ module.exports = async ({
             datasetId,
             datasetOffset,
         };
-        console.log(`Starting persistedPush with ${outputItems.length}`);
 
         await persistedPush({
             parallelPushes,
