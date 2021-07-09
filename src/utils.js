@@ -57,16 +57,8 @@ module.exports.persistedPush = async ({
     datasetOffset,
     // Only for KVs
     outputTo,
-    events,
+    migrationState,
 }) => {
-    let isMigrating = false;
-    events.on('migrating', () => {
-        isMigrating = true;
-    });
-    events.on('aborting', () => {
-        isMigrating = true;
-    });
-
     // NOTE: For dedup-as-loading, uploadBatchSize must be always bigger or equal to outputItems
     // In the crawler, we do this by setting the download batch == upload batch
     // This must be true because we persist deduping for the whole dedup batch so
@@ -74,6 +66,8 @@ module.exports.persistedPush = async ({
 
     // Or it is push as loading
     const isPushAfterLoad = typeof pushState.pushedItemsCount === 'number';
+
+    console.log(`MIGRATION STATE: ${migrationState.isMigrating}`);
 
     // Now we push from the whole BigMap
     if (output !== 'nothing') {
@@ -87,7 +81,7 @@ module.exports.persistedPush = async ({
                 + `Starting to push: ${pushedItemsCount}/${outputItems.length} was already pushed before restarting`);
         }
         for (let i = pushedItemsCount; i < outputItems.length; i += uploadBatchSize) {
-            if (isMigrating) {
+            if (migrationState.isMigrating) {
                 log.warning('Actor migration is in process, no more data will be pushed in this batch');
                 // Do nothing
                 await new Promise(() => {});

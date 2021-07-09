@@ -44,9 +44,14 @@ Apify.main(async () => {
     Apify.events.on('persistState', async () => {
         await Apify.setValue('PUSHED', pushState);
     });
+
+    const migrationState = {
+        isMigrating: false,
+    };
     // Once we are migrating, we save the push state very often
     // to increase the chance of having the latest state
     const migrationCallback = () => {
+        migrationState.isMigrating = true;
         log.warning(`Migration event: Actor will aggresivelly persist data to ensure state consistency`);
         betterSetInterval(async () => {
             await Apify.setValue('PUSHED', pushState);
@@ -76,7 +81,7 @@ Apify.main(async () => {
         preDedupTransformFn,
         postDedupTransformFn,
         pushState,
-        events: Apify.events,
+        migrationState,
     };
 
     if (mode === DEDUP_AFTER_LOAD) {
