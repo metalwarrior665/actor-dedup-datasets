@@ -57,12 +57,13 @@ module.exports.persistedPush = async ({
     datasetOffset,
     // Only for KVs
     outputTo,
+    events,
 }) => {
     let isMigrating = false;
-    Apify.events.on('migrating', () => {
+    events.on('migrating', () => {
         isMigrating = true;
     });
-    Apify.events.on('aborting', () => {
+    events.on('aborting', () => {
         isMigrating = true;
     });
 

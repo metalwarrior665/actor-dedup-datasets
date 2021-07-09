@@ -76,6 +76,7 @@ Apify.main(async () => {
         preDedupTransformFn,
         postDedupTransformFn,
         pushState,
+        events: Apify.events,
     };
 
     if (mode === DEDUP_AFTER_LOAD) {

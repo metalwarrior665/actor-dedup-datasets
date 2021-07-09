@@ -23,6 +23,7 @@ module.exports = async ({
     postDedupTransformFn,
     pushState,
     outputTo,
+    events,
 }) => {
     // We fill the state with datasetId object in the start to keep track of each dataset/offset batches
     for (const datasetId of datasetIds) {
@@ -70,6 +71,7 @@ module.exports = async ({
             uploadSleepMs,
             ...pushConfig,
             outputTo,
+            events,
         });
     };
 

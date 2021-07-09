@@ -1,13 +1,16 @@
-# Dedup datasets
+# The ultimate dataset processing actor - merge, dedup & transform
 
-Deduplicates one or more datasets by a set of fields and merges them together into one dataset of unique items. Can also be used to transform the data.
+Refined and optimized dataset processing actor for large scale merging, deduplications and transformation
+
+## Why to use this actor
+- Extremely fast data processing thanks for parallelizing workloads (easily 20x faster than default loading/pushing datasets)
+- Allows reading from multiple datasets silmutanesously, ideal for merging after scraping with many runs
+- Actor migration proof - All steps that can be persisted are persisted => work is not repeated and no duplicated data pushed
+- "Dedup as loading" mode allows for near constant memory processing even for huge datasets (think 10M+)
+- Deduplication allows for combination of many fields and even nested objects/arrays (those are JSON.stringified for deep equality check)
+- Allows for storing into KV store records
+- Allows super fast blank runs that count duplicates
 
 ## Input
-- `datasetIds` \<Array\<String\>\> Datasets that should be deduplicated and merged. **Required**
-- `fields` \<Array\<String\>\> Fields whose combination should be unique for the item to be considered unique. **Required**
-- `doPush` \<Boolean\> If true, will also push unique items into new dataset. False is useful for getting information about number of duplicates. **Default:** `true`
-- `outputDatasetId` \<String\> Optionally can push into non-default dataset.
-- `uploadSleepMs` \<Number\> How long it should wait between each batch when uploading. Useful to not overload Apify API. **Default**: `5000`
-- `uploadBatchSize` \<Number\> How many items it should upload in one pushData call. Useful to not overload Apify API. **Default**: `2000`
+Detailed INPUT table with description can be found on the [actor's public page](https://apify.com/lukaskrivka/dedup-datasets/input-schema).
 
-To be updated!
