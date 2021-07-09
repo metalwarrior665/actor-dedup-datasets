@@ -47,6 +47,7 @@ Apify.main(async () => {
     // Once we are migrating, we save the push state very often
     // to increase the chance of having the latest state
     const migrationCallback = () => {
+        log.warning(`Migration event: Actor will aggresivelly persist data to ensure state consistency`);
         betterSetInterval(async () => {
             await Apify.setValue('PUSHED', pushState);
         }, 300);
