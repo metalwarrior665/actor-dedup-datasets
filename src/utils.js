@@ -66,8 +66,13 @@ module.exports.persistedPush = async ({
         isMigrating = true;
     });
 
+    // NOTE: For dedup-as-loading, uploadBatchSize must be always bigger or equal to outputItems
+    // In the crawler, we do this by setting the download batch == upload batch
+    // This must be true because we persist deduping for the whole dedup batch so
+    // once we do that, we must ensure it is pushed
+
     // Or it is push as loading
-    const isPushAfterLoad = typeof pushState.pushedItemsCount === 'number'
+    const isPushAfterLoad = typeof pushState.pushedItemsCount === 'number';
 
     // Now we push from the whole BigMap
     if (output !== 'nothing') {
@@ -75,7 +80,6 @@ module.exports.persistedPush = async ({
         // Everything is always in the same order so we can use just a single index
 
         const pushedItemsCount = isPushAfterLoad ? pushState.pushedItemsCount : pushState[datasetId][datasetOffset];
-        console.log(`Inside persistedPush with ${outputItems.length}, pushedItemsCount: ${pushedItemsCount}`);
 
         if (!isPushAfterLoad) {
             log.info(`[Batch-${datasetId}-${datasetOffset}]: `
@@ -103,9 +107,9 @@ module.exports.persistedPush = async ({
                 // This doesn't affect the state at all, only speeds up the batch upload
                 const pushPromises = [];
                 const parallelizedBatchSize = Math.ceil(itemsToPush.length / parallelPushes);
-                for (let i = 0; i < parallelPushes; i++) {
-                    const start = i * parallelizedBatchSize;
-                    const end = (i + 1) * parallelizedBatchSize;
+                for (let j = 0; j < parallelPushes; j++) {
+                    const start = j * parallelizedBatchSize;
+                    const end = (j + 1) * parallelizedBatchSize;
                     const parallelPushChunk = itemsToPush.slice(start, end);
                     pushPromises.push(outputDataset.pushData(parallelPushChunk));
                 }

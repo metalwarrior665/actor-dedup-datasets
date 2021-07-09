@@ -1,10 +1,13 @@
-/* eslint-disable no-eval */
 const Apify = require('apify');
 
 const dedupAfterLoadFn = require('./dedup-after-load');
 const dedupAsLoadingFn = require('./dedup-as-loading');
 const { validateInput } = require('./input');
 const { betterSetInterval } = require('./utils');
+const { MODES } = require('./consts');
+
+const { DEDUP_AFTER_LOAD, DEDUP_AS_LOADING } = MODES;
+const { log } = Apify.utils;
 
 Apify.main(async () => {
     // Get input of your actor
@@ -21,7 +24,7 @@ Apify.main(async () => {
         batchSizeLoad = 50000,
         parallelLoads = 1,
         parallelPushes = 1,
-        mode = 'dedup-after-load',
+        mode = DEDUP_AFTER_LOAD,
         output = 'unique-items',
         outputTo = 'dataset',
         preDedupTransformFunction = '(items) => items',
@@ -47,13 +50,19 @@ Apify.main(async () => {
         betterSetInterval(async () => {
             await Apify.setValue('PUSHED', pushState);
         }, 300);
-    }
+    };
     Apify.events.on('migrating', migrationCallback);
     Apify.events.on('aborting', migrationCallback);
 
+    if (mode === DEDUP_AS_LOADING && batchSizeLoad !== uploadBatchSize) {
+        // See NOTE in persistedPush
+        log.warning(`For dedup-as-loading mode, batchSizeLoad must equal uploadBatchSize. Setting batch size to ${uploadBatchSize}`);
+    }
+
     const context = {
         datasetIds,
-        batchSizeLoad,
+        // See NOTE in persistedPush
+        batchSizeLoad: mode === DEDUP_AFTER_LOAD ? batchSizeLoad : uploadBatchSize,
         output,
         fields,
         parallelLoads,
@@ -68,9 +77,9 @@ Apify.main(async () => {
         pushState,
     };
 
-    if (mode === 'dedup-after-load') {
+    if (mode === DEDUP_AFTER_LOAD) {
         await dedupAfterLoadFn(context);
-    } else if (mode === 'dedup-as-loading') {
+    } else if (mode === DEDUP_AS_LOADING) {
         await dedupAsLoadingFn(context);
     }
 

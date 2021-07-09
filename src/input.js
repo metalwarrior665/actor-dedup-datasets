@@ -1,4 +1,7 @@
-/* eslint-disable no-eval */
+const { MODES } = require('./consts');
+
+const { DEDUP_AFTER_LOAD, DEDUP_AS_LOADING } = MODES;
+
 module.exports.validateInput = ({ datasetIds, fields, output, mode, outputTo, preDedupTransformFunction, postDedupTransformFunction}) => {
     if (!(Array.isArray(datasetIds) && datasetIds.length > 0)) {
         throw new Error('WRONG INPUT --- Missing datasetIds!');
@@ -12,7 +15,7 @@ module.exports.validateInput = ({ datasetIds, fields, output, mode, outputTo, pr
         throw new Error('WRONG INPUT --- output has to be one of ["unique-items", "duplicate-items", "nothing"]');
     }
 
-    if (!['dedup-after-load', 'dedup-as-loading'].includes(mode)) {
+    if (![DEDUP_AFTER_LOAD, DEDUP_AS_LOADING].includes(mode)) {
         throw new Error('WRONG INPUT --- mode has to be one of ["dedup-after-load", "dedup-as-loading"]');
     }
 
