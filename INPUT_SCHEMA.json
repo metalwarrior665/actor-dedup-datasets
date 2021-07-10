@@ -32,7 +32,7 @@
             "editor": "select",
             "default": "dedup-after-load",
             "enum": ["dedup-after-load", "dedup-as-loading"],
-            "enumTitles": ["Dedup after load (high memory use, keeps the order of items)", "Dedup as loading (low memory, no order, experimental!!!)"]
+            "enumTitles": ["Dedup after load (high memory use, keeps items ordered as in original datasets)", "Dedup as loading (low memory, doesn't keep items ordered as in original datasets)"]
         },
         "outputTo": {
             "title": "Where to output",
