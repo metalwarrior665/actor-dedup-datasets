@@ -43,6 +43,11 @@ module.exports = async ({
 
     // We call this on every new batch of items
     const processFn = async (items, { datasetId, datasetOffset }) => {
+        if (migrationState.isMigrating) {
+            log.warning('Actor migration is in process, no more data will be pushed in this batch');
+            // Do nothing
+            await new Promise(() => {});
+        }
         items = preDedupTransformFn(items);
         // We always process the whole batch but we push only those that were not pushed
         // The order inside a single batch is stable so we can do that

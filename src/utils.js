@@ -67,8 +67,6 @@ module.exports.persistedPush = async ({
     // Or it is push as loading
     const isPushAfterLoad = typeof pushState.pushedItemsCount === 'number';
 
-    console.log(`MIGRATION STATE: ${migrationState.isMigrating}`);
-
     // Now we push from the whole BigMap
     if (output !== 'nothing') {
         // We start pushing where we left the state (if migrated)
@@ -81,7 +79,8 @@ module.exports.persistedPush = async ({
                 + `Starting to push: ${pushedItemsCount}/${outputItems.length} was already pushed before restarting`);
         }
         for (let i = pushedItemsCount; i < outputItems.length; i += uploadBatchSize) {
-            if (migrationState.isMigrating) {
+            // dedup-as-loading has to be paused before dedup occurs, not here
+            if (isPushAfterLoad && migrationState.isMigrating) {
                 log.warning('Actor migration is in process, no more data will be pushed in this batch');
                 // Do nothing
                 await new Promise(() => {});
