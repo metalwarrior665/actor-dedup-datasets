@@ -67,13 +67,13 @@
             "title": "Dataset upload sleep ms",
             "type": "integer",
             "description": "How long it should wait between each batch when uploading. Useful to not overload Apify API. Only important for dataset upload.",
-            "default": 5000
+            "default": 200
         },
         "uploadBatchSize": {
             "title": "Upload batch size",
             "type": "integer",
             "description": "How many items it should upload in one pushData call. Useful to not overload Apify API. Only important for dataset upload.",
-            "default": 5000
+            "default": 1000
         },
         "datasetIdsOfFilterItems": {
             "title": "Dataset IDs for just deduping",

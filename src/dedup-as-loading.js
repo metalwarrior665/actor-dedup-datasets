@@ -40,6 +40,7 @@ module.exports = async ({
     const dedupSetDatasetName = `TEMPORARY-DEDUP-${fixedDate}`;
     // We never read because we don't use the parallel part
     const dedupSet = await createParallelPersistedSet(dedupSetDatasetName, { readSyncIntervalMs: 999999999 });
+    log.info(`Loading deduplicating set, currently contains ${dedupSet.size()} unique keys (already deduplicated items)`);
 
     // We call this on every new batch of items
     const processFn = async (items, { datasetId, datasetOffset }) => {
