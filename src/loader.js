@@ -37,7 +37,7 @@ const { log } = Apify.utils;
  * It does not persist the state inside processFn, that is a responsibillity of the caller (if needed)
  * You must not manipulate input parameters (and underlying datasets) between migrations or this will break
  */
- module.exports.loadDatasetItemsInParallel = async (datasetIds, options = {}) => {
+module.exports.loadDatasetItemsInParallel = async (datasetIds, options = {}) => {
     const {
         processFn,
         parallelLoads = 20,
@@ -109,9 +109,6 @@ const { log } = Apify.utils;
         const requestInfoArr = [];
 
         for (const datasetId of datasetIds) {
-            if (processFnLoadingState && !processFnLoadingState[datasetId]) {
-                processFnLoadingState[datasetId] = {};
-            }
             // We get the number of items first and then we precreate request info objects
             let itemCount;
             if (useLocalDataset) {
@@ -121,9 +118,20 @@ const { log } = Apify.utils;
                 itemCount = await Apify.newClient().dataset(datasetId).get().then((res) => res.itemCount);
             }
             if (debugLog) {
-                log.info(`Dataset ${datasetId} has ${itemCount} items`);
+                if (itemCount > 0) {
+                    log.info(`Dataset ${datasetId} has ${itemCount} items`);
+                } else {
+                    log.warning(`Dataset ${datasetId} has 0 items, skipping`);
+                }
+            }
+            if (itemCount === 0) {
+                continue;
             }
             const numberOfBatches = Math.ceil(itemCount / batchSize);
+
+            if (processFnLoadingState && !processFnLoadingState[datasetId]) {
+                processFnLoadingState[datasetId] = {};
+            }
 
             for (let i = 0; i < numberOfBatches; i++) {
                 const localOffsetLimit = calculateLocalOffsetLimit({ offset, limit, localStart: i * batchSize, batchSize });

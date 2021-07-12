@@ -14,6 +14,10 @@ module.exports.betterSetInterval = (func, delay) => {
 };
 
 module.exports.dedup = ({ items, output, fields, dedupSet }) => {
+    // If no fields are provided, we don't do any deduping
+    if (!fields || fields.length === 0) {
+        return items;
+    }
     // const dedupStart = Date.now();
 
     const outputItems = [];

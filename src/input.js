@@ -7,10 +7,6 @@ module.exports.validateInput = ({ datasetIds, fields, output, mode, outputTo, pr
         throw new Error('WRONG INPUT --- Missing datasetIds!');
     }
 
-    if (!(Array.isArray(fields) && datasetIds.length > 0)) {
-        throw new Error('WRONG INPUT --- Missing fields!');
-    }
-
     if (!['unique-items', 'duplicate-items', 'nothing'].includes(output)) {
         throw new Error('WRONG INPUT --- output has to be one of ["unique-items", "duplicate-items", "nothing"]');
     }
