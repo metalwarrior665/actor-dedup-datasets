@@ -22,6 +22,7 @@ module.exports = async ({
     pushState,
     outputTo,
     migrationState,
+    verboseLog,
 }) => {
     const dedupSet = new BigSet();
 
@@ -69,5 +70,6 @@ module.exports = async ({
     log.info(`Going to push ${outputItems.length - pushState.pushedItemsCount} pending, ${outputItems.length} total`);
 
     const outputDataset = await Apify.openDataset(outputDatasetId);
-    await persistedPush({ outputItems, parallelPushes, pushState, uploadBatchSize, output, outputDataset, uploadSleepMs, outputTo, migrationState });
+    await persistedPush({ outputItems, parallelPushes, pushState, uploadBatchSize, output, outputDataset,
+        uploadSleepMs, outputTo, migrationState, verboseLog });
 };

@@ -75,6 +75,12 @@
             "description": "How many items it should upload in one pushData call. Useful to not overload Apify API. Only important for dataset upload.",
             "default": 1000
         },
+        "verboseLog": {
+            "title": "verbose log",
+            "type": "boolean",
+            "description": "Good for smaller runs. Large runs might run out of log space.",
+            "default": false
+        },
         "datasetIdsOfFilterItems": {
             "title": "Dataset IDs for just deduping",
             "type": "array",

@@ -1,6 +1,8 @@
 {
     "extends": "@apify",
     "rules": {
-        "no-eval": "off"
+        "no-eval": "off",
+        "object-property-newline": "off",
+        "no-lonely-if": "off"
     }
 }

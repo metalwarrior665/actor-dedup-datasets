@@ -62,6 +62,7 @@ module.exports.persistedPush = async ({
     // Only for KVs
     outputTo,
     migrationState,
+    verboseLog,
 }) => {
     // NOTE: For dedup-as-loading, uploadBatchSize must be always bigger or equal to outputItems
     // In the crawler, we do this by setting the download batch == upload batch
@@ -78,7 +79,7 @@ module.exports.persistedPush = async ({
 
         const pushedItemsCount = isPushAfterLoad ? pushState.pushedItemsCount : pushState[datasetId][datasetOffset];
 
-        if (!isPushAfterLoad) {
+        if (!isPushAfterLoad && verboseLog) {
             log.info(`[Batch-${datasetId}-${datasetOffset}]: `
                 + `Starting to push: ${pushedItemsCount}/${outputItems.length} was already pushed before restarting`);
         }
@@ -124,12 +125,13 @@ module.exports.persistedPush = async ({
                 await Apify.setValue(recordKey, itemsToPush);
             }
 
-            const itemCount = outputTo === 'dataset' ? (await outputDataset.getInfo().then((res) => res.itemCount)) : 'output in KV';
             if (isPushAfterLoad) {
-                log.info(`Pushed total: ${i + itemsToPush.length}, In dataset (delayed): ${itemCount}`);
+                log.info(`Pushed total: ${i + itemsToPush.length}`);
             } else {
-                log.info(`[Batch-${datasetId}-${datasetOffset}]: `
-                    + `Pushed in batch: ${i + itemsToPush.length}/${outputItems.length}, In dataset (delayed): ${itemCount}`);
+                if (verboseLog) {
+                    log.info(`[Batch-${datasetId}-${datasetOffset}]: `
+                        + `Pushed in batch: ${i + itemsToPush.length}/${outputItems.length}`);
+                }
             }
             await Apify.utils.sleep(uploadSleepMs);
         }

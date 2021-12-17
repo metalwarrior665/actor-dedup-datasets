@@ -218,9 +218,9 @@ module.exports.loadDatasetItemsInParallel = async (datasetIds, options = {}) => 
 
         if (debugLog) {
             log.info(
-                `Items loaded from dataset ${datasetId}: ${items.length}, offset: ${requestInfoObj.offset},
-        total loaded from dataset ${datasetId}: ${totalLoadedPerDataset[datasetId]},
-        total loaded: ${totalLoaded}`,
+                `Items loaded from dataset ${datasetId}: ${items.length}, offset: ${requestInfoObj.offset}, `
+                    + `total loaded from dataset ${datasetId}: ${totalLoadedPerDataset[datasetId]}, `
+                    + `total loaded: ${totalLoaded}`,
             );
         }
         // We either collect the data or we process them on the fly

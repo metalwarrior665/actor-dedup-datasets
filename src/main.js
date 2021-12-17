@@ -17,6 +17,7 @@ Apify.main(async () => {
 
     const {
         datasetIds,
+        // If no dedup fields are supplied, we skip the deduping
         fields,
         outputDatasetId,
         uploadSleepMs = 200,
@@ -29,6 +30,7 @@ Apify.main(async () => {
         outputTo = 'dataset',
         preDedupTransformFunction = '(items) => items',
         postDedupTransformFunction = '(items) => items',
+        verboseLog = false,
         // Items from these datasets will be used only to dedup against
         // Will automatically just load fields needed for dedup
         // These datasets needs to be loaded before the outputing datasets
@@ -82,6 +84,7 @@ Apify.main(async () => {
         postDedupTransformFn,
         pushState,
         migrationState,
+        verboseLog,
     };
 
     if (mode === DEDUP_AFTER_LOAD) {

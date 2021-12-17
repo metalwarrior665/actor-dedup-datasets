@@ -2,7 +2,7 @@ const { MODES } = require('./consts');
 
 const { DEDUP_AFTER_LOAD, DEDUP_AS_LOADING } = MODES;
 
-module.exports.validateInput = ({ datasetIds, fields, output, mode, outputTo, preDedupTransformFunction, postDedupTransformFunction}) => {
+module.exports.validateInput = ({ datasetIds, output, mode, outputTo, preDedupTransformFunction, postDedupTransformFunction}) => {
     if (!(Array.isArray(datasetIds) && datasetIds.length > 0)) {
         throw new Error('WRONG INPUT --- Missing datasetIds!');
     }
