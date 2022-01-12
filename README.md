@@ -26,9 +26,11 @@ This actor enables you to do arbitrary data transformations before and after ded
 
 These functions simply take the array of items and should return array of items. You don't need to necessarily return the same amount of items (can filter some out or add new ones).
 
+You can access an object with helper variables, currently containing the [Apify SDK reference](https://sdk.apify.com/docs/api/apify)
+
 The default transformation does nothing with the items:
 ```javascript
-(items) => {
+(items, { Apify }) => {
     return items;
 }
 ```

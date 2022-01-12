@@ -59,11 +59,11 @@ module.exports = async ({
         },
     );
 
-    items = preDedupTransformFn(items);
+    items = await preDedupTransformFn(items, { Apify });
 
     let outputItems = dedup({ items, output, fields, dedupSet });
 
-    outputItems = postDedupTransformFn(outputItems);
+    outputItems = await postDedupTransformFn(outputItems, { Apify });
 
     log.info(`Total loaded: ${items.length}, Total unique: ${dedupSet.size}, Total duplicates: ${items.length - dedupSet.size}`);
 
