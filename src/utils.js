@@ -2,6 +2,23 @@ const Apify = require('apify');
 
 const { log } = Apify.utils;
 
+module.exports.getRealDatasetId = async (datasetIdOrName) => {
+    const client = Apify.newClient();
+    const couldBeId = datasetIdOrName.match(/[a-zA-Z0-9]{17}/);
+    let datasetInfo;
+    if (couldBeId) {
+        try {
+            datasetInfo = await client.dataset(datasetIdOrName).get();
+        } catch (e) {}
+    }
+    if (!datasetInfo) {
+        datasetInfo = await client.datasets().getOrCreate(datasetIdOrName);
+        log.info(`Output dataset ID was not provided, `
+            + `will use or create named dataset: ${datasetIdOrName} with ID: ${datasetInfo.id}`);
+    }
+    return datasetInfo.id;
+};
+
 // We don't care about clearing it here
 module.exports.betterSetInterval = (func, delay) => {
     const funcWrapper = function () {

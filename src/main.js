@@ -3,7 +3,7 @@ const Apify = require('apify');
 const dedupAfterLoadFn = require('./dedup-after-load');
 const dedupAsLoadingFn = require('./dedup-as-loading');
 const { validateInput } = require('./input');
-const { betterSetInterval } = require('./utils');
+const { betterSetInterval, getRealDatasetId } = require('./utils');
 const { MODES } = require('./consts');
 
 const { DEDUP_AFTER_LOAD, DEDUP_AS_LOADING } = MODES;
@@ -19,6 +19,7 @@ Apify.main(async () => {
         datasetIds,
         // If no dedup fields are supplied, we skip the deduping
         fields,
+        // Also can be a name of dataset (to be created)
         outputDatasetId,
         uploadSleepMs = 200,
         uploadBatchSize = 1000,
@@ -38,6 +39,7 @@ Apify.main(async () => {
     } = input;
 
     validateInput({ datasetIds, fields, output, mode, outputTo, preDedupTransformFunction, postDedupTransformFunction });
+    const realOutputDatasetId = await getRealDatasetId(outputDatasetId);
 
     const preDedupTransformFn = eval(preDedupTransformFunction);
     const postDedupTransformFn = eval(postDedupTransformFunction);
@@ -75,7 +77,7 @@ Apify.main(async () => {
         fields,
         parallelLoads,
         parallelPushes,
-        outputDatasetId,
+        outputDatasetId: realOutputDatasetId,
         uploadBatchSize,
         uploadSleepMs,
         outputTo,

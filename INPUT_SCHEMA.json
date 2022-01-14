@@ -44,9 +44,9 @@
             "enumTitles": ["Dataset", "Key-Value Store (split into records)"]
         },
         "outputDatasetId": {
-            "title": "Output dataset ID (optional)",
+            "title": "Output dataset ID or name (optional)",
             "type": "string",
-            "description": "Optionally can push into non-default dataset.",
+            "description": "Optionally can push into dataset of your choice. If you provide a dataset name that doesn't exist, a new named dataset will be created.",
             "editor": "textfield"
         },
         "parallelLoads": {
