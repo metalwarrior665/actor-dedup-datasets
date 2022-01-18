@@ -3,6 +3,9 @@ const Apify = require('apify');
 const { log } = Apify.utils;
 
 module.exports.getRealDatasetId = async (datasetIdOrName) => {
+    if (!datasetIdOrName) {
+        return undefined;
+    }
     const client = Apify.newClient();
     const couldBeId = datasetIdOrName.match(/[a-zA-Z0-9]{17}/);
     let datasetInfo;
