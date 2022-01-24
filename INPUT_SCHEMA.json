@@ -81,6 +81,12 @@
             "description": "Good for smaller runs. Large runs might run out of log space.",
             "default": false
         },
+        "fieldsToLoad": {
+            "title": "Limit fields to load",
+            "type": "array",
+            "description": "You can choose which fields to load only. Useful to speed up the loading and reduce memory needs.",
+            "editor": "stringList"
+        },
         "datasetIdsOfFilterItems": {
             "title": "Dataset IDs for just deduping",
             "type": "array",

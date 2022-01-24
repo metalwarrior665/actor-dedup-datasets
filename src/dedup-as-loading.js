@@ -18,6 +18,7 @@ module.exports = async ({
     outputDatasetId,
     uploadBatchSize,
     uploadSleepMs,
+    fieldsToLoad,
     datasetIdsOfFilterItems,
     preDedupTransformFn,
     postDedupTransformFn,
@@ -110,6 +111,8 @@ module.exports = async ({
             debugLog: true,
             processFn,
             persistLoadingStateForProcesFn: true,
+            // usually undefined
+            fields: fieldsToLoad,
         },
     );
 

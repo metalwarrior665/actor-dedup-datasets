@@ -16,6 +16,7 @@ module.exports = async ({
     outputDatasetId,
     uploadBatchSize,
     uploadSleepMs,
+    fieldsToLoad,
     datasetIdsOfFilterItems,
     preDedupTransformFn,
     postDedupTransformFn,
@@ -53,6 +54,8 @@ module.exports = async ({
             batchSize: batchSizeLoad,
             parallelLoads,
             debugLog: true,
+            // usually undefined
+            fields: fieldsToLoad,
             // For a single dataset, we can optimize the loading to skip loading what we pushed already after migration
             // TODO: Make this work for multiple datasets in loadDatasetItemsInParallel
             offset: datasetIds.length === 1 ? pushState.pushedItemsCount : 0,
