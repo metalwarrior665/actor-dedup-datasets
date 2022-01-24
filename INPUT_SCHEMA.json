@@ -63,17 +63,21 @@
             "default": 1,
             "maximum": 20
         },
-        "uploadSleepMs": {
-            "title": "Dataset upload sleep ms",
-            "type": "integer",
-            "description": "How long it should wait between each batch when uploading. Useful to not overload Apify API. Only important for dataset upload.",
-            "default": 200
-        },
         "uploadBatchSize": {
             "title": "Upload batch size",
             "type": "integer",
             "description": "How many items it should upload in one pushData call. Useful to not overload Apify API. Only important for dataset upload.",
             "default": 1000
+        },
+        "offset": {
+            "title": "Offset (how many items to skip from start)",
+            "type": "integer",
+            "description": "By default we don't skip any items which is the same as setting offset to 0. For multiple datasets, it takes offset into the sum of their item counts but that is not very useful."
+        },
+        "limit": {
+            "title": "Limit (how many items to load)",
+            "type": "integer",
+            "description": "By default we don't limit the number loaded items"
         },
         "verboseLog": {
             "title": "verbose log",

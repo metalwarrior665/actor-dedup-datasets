@@ -15,7 +15,8 @@ module.exports = async ({
     parallelPushes,
     outputDatasetId,
     uploadBatchSize,
-    uploadSleepMs,
+    offset,
+    limit,
     fieldsToLoad,
     datasetIdsOfFilterItems,
     preDedupTransformFn,
@@ -58,7 +59,8 @@ module.exports = async ({
             fields: fieldsToLoad,
             // For a single dataset, we can optimize the loading to skip loading what we pushed already after migration
             // TODO: Make this work for multiple datasets in loadDatasetItemsInParallel
-            offset: datasetIds.length === 1 ? pushState.pushedItemsCount : 0,
+            offset: datasetIds.length === 1 ? pushState.pushedItemsCount : offset,
+            limit,
         },
     );
 
@@ -74,5 +76,5 @@ module.exports = async ({
 
     const outputDataset = await Apify.openDataset(outputDatasetId);
     await persistedPush({ outputItems, parallelPushes, pushState, uploadBatchSize, output, outputDataset,
-        uploadSleepMs, outputTo, migrationState, verboseLog });
+        outputTo, migrationState, verboseLog });
 };

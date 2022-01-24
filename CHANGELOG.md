@@ -1,6 +1,8 @@
 ## 2021-01-24
 *Featues*
 - Added `fieldsToLoad` to input to increase speed and reducem meory if you don't need full items in output
+- Added `limit` and `offset` to input to be able to process only slices of dataset
+- Removed `uploadSleepMs` as the platform can now handle much higher load of upload
 
 ## 2021-01-14
 *Features*

@@ -1,5 +1,7 @@
 const Apify = require('apify');
 
+const { UPLOAD_SLEEP_MS } = require('./consts');
+
 const { log } = Apify.utils;
 
 module.exports.getRealDatasetId = async (datasetIdOrName) => {
@@ -75,7 +77,6 @@ module.exports.persistedPush = async ({
     uploadBatchSize,
     outputDataset,
     output,
-    uploadSleepMs,
     pushState,
     datasetId,
     datasetOffset,
@@ -153,7 +154,7 @@ module.exports.persistedPush = async ({
                         + `Pushed in batch: ${i + itemsToPush.length}/${outputItems.length}`);
                 }
             }
-            await Apify.utils.sleep(uploadSleepMs);
+            await Apify.utils.sleep(UPLOAD_SLEEP_MS);
         }
     }
 };

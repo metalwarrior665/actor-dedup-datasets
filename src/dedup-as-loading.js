@@ -17,7 +17,8 @@ module.exports = async ({
     parallelPushes,
     outputDatasetId,
     uploadBatchSize,
-    uploadSleepMs,
+    offset,
+    limit,
     fieldsToLoad,
     datasetIdsOfFilterItems,
     preDedupTransformFn,
@@ -76,7 +77,6 @@ module.exports = async ({
             uploadBatchSize,
             output,
             outputDataset,
-            uploadSleepMs,
             ...pushConfig,
             outputTo,
             migrationState,
@@ -113,6 +113,8 @@ module.exports = async ({
             persistLoadingStateForProcesFn: true,
             // usually undefined
             fields: fieldsToLoad,
+            offset,
+            limit,
         },
     );
 
