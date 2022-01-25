@@ -3,6 +3,8 @@
     "rules": {
         "no-eval": "off",
         "object-property-newline": "off",
-        "no-lonely-if": "off"
+        "no-lonely-if": "off",
+        "no-continue": "off",
+        "no-else-return":"off"
     }
 }

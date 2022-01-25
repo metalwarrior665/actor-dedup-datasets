@@ -53,7 +53,7 @@ module.exports.loadDatasetItemsInParallel = async (datasetIds, options = {}) => 
         useLocalDataset = false, // Will fetch/create datasets by id or name locally or on current account
     } = options;
 
-    if (!Apify.isAtHome() && fields) {
+    if (useLocalDataset && !Apify.isAtHome() && fields) {
         log.warning('loadDatasetItemsInParallel - fields option does not work on local datasets');
     }
 
@@ -84,7 +84,6 @@ module.exports.loadDatasetItemsInParallel = async (datasetIds, options = {}) => 
                 }
                 // Or it is inside the current batch and we slice it from the start (including whole batch)
                 return localEnd - offset;
-            // eslint-disable-next-line no-else-return
             } else { // Consider (inputEnd < localEnd) Means limit ends inside current batch
                 if (offset < localStart) {
                     return inputEnd - localStart;
@@ -136,7 +135,7 @@ module.exports.loadDatasetItemsInParallel = async (datasetIds, options = {}) => 
             for (let i = 0; i < numberOfBatches; i++) {
                 const localOffsetLimit = calculateLocalOffsetLimit({ offset, limit, localStart: i * batchSize, batchSize });
                 if (!localOffsetLimit) {
-                    continue; // eslint-disable-line no-continue
+                    continue;
                 }
 
                 if (processFnLoadingState) {
@@ -144,7 +143,7 @@ module.exports.loadDatasetItemsInParallel = async (datasetIds, options = {}) => 
                         processFnLoadingState[datasetId][localOffsetLimit.offset] = { done: false };
                     } else if (processFnLoadingState[datasetId][localOffsetLimit.offset].done) {
                         log.info(`Batch for dataset ${datasetId}, offset: ${localOffsetLimit.offset} was already processed, skipping...`);
-                        continue; // eslint-disable-line no-continue
+                        continue;
                     }
                 }
 
