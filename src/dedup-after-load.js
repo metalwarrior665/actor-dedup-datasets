@@ -58,8 +58,9 @@ module.exports = async ({
             // usually undefined
             fields: fieldsToLoad,
             // For a single dataset, we can optimize the loading to skip loading what we pushed already after migration
-            // TODO: Make this work for multiple datasets in loadDatasetItemsInParallel
-            offset: datasetIds.length === 1 ? offset + pushState.pushedItemsCount : offset,
+            // TODO: Fitx Optimize loading, e.g.  datasetIds.length === 1 ? offset + pushState.pushedItemsCount : offset,
+            // is bugged because we load less items and then push less
+            offset,
             limit,
         },
     );
