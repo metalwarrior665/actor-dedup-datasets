@@ -52,14 +52,14 @@ module.exports = async ({
             // Do nothing
             await new Promise(() => {});
         }
-        items = await preDedupTransformFn(items, { Apify });
+        items = await preDedupTransformFn(items, { Apify, datasetId, datasetOffset });
         // We always process the whole batch but we push only those that were not pushed
         // The order inside a single batch is stable so we can do that
         let outputItems = dedup({ items, output, fields, dedupSet });
 
         log.info(`[Batch-${datasetId}-${datasetOffset}]: Loaded: ${items.length}, Total unique: ${dedupSet.size()}`);
 
-        outputItems = await postDedupTransformFn(outputItems, { Apify });
+        outputItems = await postDedupTransformFn(outputItems, { Apify, datasetId, datasetOffset });
 
         if (typeof pushState[datasetId][datasetOffset] !== 'number') {
             pushState[datasetId][datasetOffset] = 0;
@@ -85,7 +85,7 @@ module.exports = async ({
     };
 
     const processFnNoPush = async (items, { datasetId, datasetOffset }) => {
-        items = await preDedupTransformFn(items, { Apify });
+        items = await preDedupTransformFn(items, { Apify, datasetId, datasetOffset });
         dedup({ items, output: 'nothing', fields, dedupSet });
         log.info(`[Batch-${datasetId}-${datasetOffset}]: Loaded: ${items.length}, Total unique: ${dedupSet.size()}`);
     };

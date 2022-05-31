@@ -35,6 +35,14 @@ The default transformation does nothing with the items:
 }
 ```
 
+In case of `dedup-as-loading` mode, you only have access to the items of the specific batch.
+But you can also access `datasetId` and `datasetOffset` parameters as each batch is only from one dataset.
+```javascript
+(items, { Apify, datasetId, datasetOffset }) => {
+    return items;
+}
+```
+
 ## Input
 Detailed INPUT table with description can be found on the [actor's public page](https://apify.com/lukaskrivka/dedup-datasets/input-schema).
 
