@@ -39,7 +39,14 @@ Apify.main(async () => {
         // Will automatically just load fields needed for dedup
         // These datasets needs to be loaded before the outputing datasets
         datasetIdsOfFilterItems,
+
+        // Just debugging dataset duplications
+        debugPlatform = false,
     } = input;
+
+    if (debugPlatform) {
+        log.setLevel(log.LEVELS.DEBUG);
+    }
 
     validateInput({ datasetIds, fields, output, mode, outputTo, preDedupTransformFunction, postDedupTransformFunction });
     const realOutputDatasetId = await getRealDatasetId(outputDatasetId);
