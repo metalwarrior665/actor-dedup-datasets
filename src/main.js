@@ -19,12 +19,12 @@ Apify.main(async () => {
         datasetIds,
         // If no dedup fields are supplied, we skip the deduping
         fields,
-        // Also can be a name of dataset (to be created)
+        // Also can be a name of dataset (can be created by this actor)
         outputDatasetId,
         uploadBatchSize = 1000,
         batchSizeLoad = 50000,
-        parallelLoads = 1,
-        parallelPushes = 1,
+        parallelLoads = 10,
+        parallelPushes = 5,
         offset,
         limit,
         mode = DEDUP_AFTER_LOAD,

@@ -11,7 +11,7 @@
             "editor": "stringList"
         },
         "fields": {
-            "title": "Fields for dedup",
+            "title": "Fields for deduplication",
             "type": "array",
             "description": "Fields whose combination should be unique for the item to be considered unique. If none are provided, the actor does not perform deduplication.",
             "editor": "stringList"
@@ -34,6 +34,36 @@
             "enum": ["dedup-after-load", "dedup-as-loading"],
             "enumTitles": ["Dedup after load (high memory use, keeps items ordered as in original datasets)", "Dedup as loading (low memory, doesn't keep items ordered as in original datasets)"]
         },
+        "outputDatasetId": {
+            "title": "Output dataset ID or name (optional)",
+            "type": "string",
+            "description": "Optionally can push into dataset of your choice. If you provide a dataset name that doesn't exist, a new named dataset will be created.",
+            "editor": "textfield"
+        },
+        "fieldsToLoad": {
+            "title": "Limit fields to load",
+            "type": "array",
+            "description": "You can choose which fields to load only. Useful to speed up the loading and reduce memory needs.",
+            "editor": "stringList",
+            "sectionCaption": "Limit fields to load for faster execution",
+            "sectionDescription": "You can only load certain fields which can make this actor several times faster. Useful for checking data quality and duplicates. If you need to push data in the original format, don't use this."   
+        },
+        "preDedupTransformFunction": {
+            "title": "Pre dedup transform function",
+            "type": "string",
+            "description": "Function to transform items before deduplication is applied. For 'dedup-after-load' mode this is done for all items at once. For 'dedup-as-loading' this is applied to each batch separately.",
+            "editor": "javascript",
+            "prefill": "async (items, { Apify }) => {\n    return items;\n}",
+            "sectionCaption": "Transforming functions",
+            "sectionDescription": "Optionally transform the data. Filling just one function is enough but you can use both for 2 process transform."   
+        },
+        "postDedupTransformFunction": {
+            "title": "Post dedup transform function",
+            "type": "string",
+            "description": "Function to transform items after deduplication is applied. For 'dedup-after-load' mode this is done for all items at once. For 'dedup-as-loading' this is applied to each batch separately.",
+            "editor": "javascript",
+            "prefill": "async (items, { Apify }) => {\n    return items;\n}"
+        },
         "outputTo": {
             "title": "Where to output",
             "type": "string",
@@ -41,13 +71,9 @@
             "editor": "select",
             "default": "dataset",
             "enum": ["dataset", "key-value-store"],
-            "enumTitles": ["Dataset", "Key-Value Store (split into records)"]
-        },
-        "outputDatasetId": {
-            "title": "Output dataset ID or name (optional)",
-            "type": "string",
-            "description": "Optionally can push into dataset of your choice. If you provide a dataset name that doesn't exist, a new named dataset will be created.",
-            "editor": "textfield"
+            "enumTitles": ["Dataset", "Key-Value Store (split into records)"],
+            "sectionCaption": "Advanced config",
+            "sectionDescription": "You should not need to touch these unless for very specific needs."   
         },
         "parallelLoads": {
             "title": "Parallel loads",
@@ -59,15 +85,24 @@
         "parallelPushes": {
             "title": "Parallel pushes",
             "type": "integer",
-            "description": "Deduped data can be pushed in parallel batches to speed things up if needed. Be careful of increasing this as it can introduce performance issues that might lead to duplicates or data corruption.",
-            "default": 1,
-            "maximum": 100
+            "description": "Deduped data can be pushed in parallel batches to speed things up if needed. If you want the data to be in the exact same order, you need to set this to 1.",
+            "default": 5,
+            "minimum": 1,
+            "maximum": 50
         },
         "uploadBatchSize": {
             "title": "Upload batch size",
             "type": "integer",
             "description": "How many items it should upload in one pushData call. Useful to not overload Apify API. Only important for dataset upload.",
-            "default": 1000
+            "default": 500,
+            "minimum": 10,
+            "maximum": 1000
+        },
+        "batchSizeLoad": {
+            "title": "Download batch size",
+            "type": "integer",
+            "description": "How many items it will load in a single batch.",
+            "default": 50000
         },
         "offset": {
             "title": "Offset (how many items to skip from start)",
@@ -85,31 +120,11 @@
             "description": "Good for smaller runs. Large runs might run out of log space.",
             "default": false
         },
-        "fieldsToLoad": {
-            "title": "Limit fields to load",
-            "type": "array",
-            "description": "You can choose which fields to load only. Useful to speed up the loading and reduce memory needs.",
-            "editor": "stringList"
-        },
         "datasetIdsOfFilterItems": {
             "title": "Dataset IDs for just deduping",
             "type": "array",
             "description": "The items from these datasets will be just used as a dedup filter for the main datasets. These items are loaded first and then the main datasets are compared for uniqueness and pushed.",
             "editor": "stringList"
-        },
-        "preDedupTransformFunction": {
-            "title": "Pre dedup transform function",
-            "type": "string",
-            "description": "Function to transform items before deduplication is applied. For 'dedup-after-load' mode this is done for all items at once. For 'dedup-as-loading' this is applied to each batch separately.",
-            "editor": "javascript",
-            "prefill": "async (items, { Apify }) => {\n    return items;\n}"
-        },
-        "postDedupTransformFunction": {
-            "title": "Post dedup transform function",
-            "type": "string",
-            "description": "Function to transform items after deduplication is applied. For 'dedup-after-load' mode this is done for all items at once. For 'dedup-as-loading' this is applied to each batch separately.",
-            "editor": "javascript",
-            "prefill": "async (items, { Apify }) => {\n    return items;\n}"
         }
     }
 }
