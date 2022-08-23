@@ -17,7 +17,19 @@ Apify.main(async () => {
 
     // We limit the upload batch size because each batch must finish in the 10 seconds on migratio event
     if (input.uploadBatchSize > 1000) {
+        log.warning(`Maximum uploadBatchSize can be 1000. This is to keep consistency accross migrations.`);
         input.uploadBatchSize = 1000;
+    }
+
+    if (input.mode === DEDUP_AS_LOADING && input.parallelPushes > 1) {
+        log.warning(`Limiting parallel pushes to 1 because dedup as loading is already pushing in parallel by default`);
+        input.parallelPushes = 1;
+    }
+
+    if (input.mode === DEDUP_AS_LOADING && input.batchSizeLoad !== input.uploadBatchSize) {
+        // See NOTE in persistedPush
+        log.warning(`For dedup-as-loading mode, batchSizeLoad must equal uploadBatchSize. Setting batch size to ${input.uploadBatchSize}`);
+        input.batchSizeLoad = input.uploadBatchSize;
     }
 
     const {
@@ -99,18 +111,6 @@ Apify.main(async () => {
         migrationState,
         verboseLog,
     };
-
-    if (mode === DEDUP_AS_LOADING && parallelLoads > 1 && parallelPushes > 1) {
-        log.warning(`Limiting parallel pushes to 1 because dedup as loading is already pushing in parallel by default`);
-        context.parallelPushes = 1;
-        context.uploadBatchSize = uploadBatchSize;
-    }
-
-    if (mode === DEDUP_AS_LOADING && context.batchSizeLoad !== context.uploadBatchSize) {
-        // See NOTE in persistedPush
-        log.warning(`For dedup-as-loading mode, batchSizeLoad must equal uploadBatchSize. Setting batch size to ${finalUploadBatchSize}`);
-        context.batchSizeLoad = finalUploadBatchSize;
-    }
 
     if (mode === DEDUP_AFTER_LOAD) {
         await dedupAfterLoadFn(context);
