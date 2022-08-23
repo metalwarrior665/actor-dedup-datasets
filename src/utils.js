@@ -105,10 +105,8 @@ module.exports.persistedPush = async ({
                 + `Starting to push: ${pushedItemsCount}/${outputItems.length} was already pushed before restarting`);
         }
         for (let i = pushedItemsCount; i < outputItems.length; i += uploadBatchSize) {
-            // dedup-as-loading has to be paused before dedup occurs, not here
-            if (isPushAfterLoad && migrationState.isMigrating) {
-                log.warning('Actor migration is in process, no more data will be pushed in this batch');
-                // Do nothing
+            if (migrationState.isMigrating) {
+                // Pause here and let the actor migrate
                 await new Promise(() => {});
             }
             const itemsToPush = outputItems.slice(i, i + uploadBatchSize);

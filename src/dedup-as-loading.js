@@ -48,8 +48,7 @@ module.exports = async ({
     // We call this on every new batch of items
     const processFn = async (items, { datasetId, datasetOffset }) => {
         if (migrationState.isMigrating) {
-            // Actor migration is in process, no more data will be pushed in this batch
-            // Do nothing
+            // Pause here and let the actor migrate
             await new Promise(() => {});
         }
         items = await preDedupTransformFn(items, { Apify, datasetId, datasetOffset });
