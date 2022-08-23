@@ -48,7 +48,7 @@ module.exports = async ({
     // We call this on every new batch of items
     const processFn = async (items, { datasetId, datasetOffset }) => {
         if (migrationState.isMigrating) {
-            log.warning('Actor migration is in process, no more data will be pushed in this batch');
+            // Actor migration is in process, no more data will be pushed in this batch
             // Do nothing
             await new Promise(() => {});
         }
