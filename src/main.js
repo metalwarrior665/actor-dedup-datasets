@@ -15,6 +15,11 @@ Apify.main(async () => {
     console.log('My input:');
     console.dir(input);
 
+    // We limit the upload batch size because each batch must finish in the 10 seconds on migratio event
+    if (input.uploadBatchSize > 1000) {
+        input.uploadBatchSize = 1000;
+    }
+
     const {
         datasetIds,
         // If no dedup fields are supplied, we skip the deduping
@@ -74,21 +79,24 @@ Apify.main(async () => {
     Apify.events.on('migrating', migrationCallback);
     Apify.events.on('aborting', migrationCallback);
 
-    if (mode === DEDUP_AS_LOADING && batchSizeLoad !== uploadBatchSize) {
+    // This is a bit dirty but we split each batch for parallel processing so it needs to grow by parallels
+    const finalUploadBatchSize = uploadBatchSize * parallelPushes;
+
+    if (mode === DEDUP_AS_LOADING && batchSizeLoad !== finalUploadBatchSize) {
         // See NOTE in persistedPush
-        log.warning(`For dedup-as-loading mode, batchSizeLoad must equal uploadBatchSize. Setting batch size to ${uploadBatchSize}`);
+        log.warning(`For dedup-as-loading mode, batchSizeLoad must equal uploadBatchSize. Setting batch size to ${finalUploadBatchSize}`);
     }
 
     const context = {
         datasetIds,
         // See NOTE in persistedPush
-        batchSizeLoad: mode === DEDUP_AFTER_LOAD ? batchSizeLoad : uploadBatchSize,
+        batchSizeLoad: mode === DEDUP_AFTER_LOAD ? batchSizeLoad : finalUploadBatchSize,
         output,
         fields,
         parallelLoads,
         parallelPushes,
         outputDatasetId: realOutputDatasetId,
-        uploadBatchSize,
+        uploadBatchSize: finalUploadBatchSize,
         outputTo,
         offset,
         limit,
