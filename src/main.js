@@ -78,15 +78,10 @@ Apify.main(async () => {
     // This is a bit dirty but we split each batch for parallel processing so it needs to grow by parallels
     const finalUploadBatchSize = uploadBatchSize * parallelPushes;
 
-    if (mode === DEDUP_AS_LOADING && batchSizeLoad !== finalUploadBatchSize) {
-        // See NOTE in persistedPush
-        log.warning(`For dedup-as-loading mode, batchSizeLoad must equal uploadBatchSize. Setting batch size to ${finalUploadBatchSize}`);
-    }
-
     const context = {
         datasetIds,
         // See NOTE in persistedPush
-        batchSizeLoad: mode === DEDUP_AFTER_LOAD ? batchSizeLoad : finalUploadBatchSize,
+        batchSizeLoad,
         output,
         fields,
         parallelLoads,
@@ -104,6 +99,18 @@ Apify.main(async () => {
         migrationState,
         verboseLog,
     };
+
+    if (mode === DEDUP_AS_LOADING && context.batchSizeLoad !== context.uploadBatchSize) {
+        // See NOTE in persistedPush
+        log.warning(`For dedup-as-loading mode, batchSizeLoad must equal uploadBatchSize. Setting batch size to ${finalUploadBatchSize}`);
+        context.batchSizeLoad = finalUploadBatchSize;
+    }
+
+    if (mode === DEDUP_AS_LOADING && parallelLoads > 1 && parallelPushes > 1) {
+        log.warning(`Limiting parallel pushes to 1 because dedup as loading is already pushing in parallel by default`);
+        context.parallelPushes = 1;
+        context.uploadBatchSize = uploadBatchSize;
+    }
 
     if (mode === DEDUP_AFTER_LOAD) {
         await dedupAfterLoadFn(context);
