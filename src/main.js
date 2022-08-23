@@ -100,16 +100,16 @@ Apify.main(async () => {
         verboseLog,
     };
 
-    if (mode === DEDUP_AS_LOADING && context.batchSizeLoad !== context.uploadBatchSize) {
-        // See NOTE in persistedPush
-        log.warning(`For dedup-as-loading mode, batchSizeLoad must equal uploadBatchSize. Setting batch size to ${finalUploadBatchSize}`);
-        context.batchSizeLoad = finalUploadBatchSize;
-    }
-
     if (mode === DEDUP_AS_LOADING && parallelLoads > 1 && parallelPushes > 1) {
         log.warning(`Limiting parallel pushes to 1 because dedup as loading is already pushing in parallel by default`);
         context.parallelPushes = 1;
         context.uploadBatchSize = uploadBatchSize;
+    }
+
+    if (mode === DEDUP_AS_LOADING && context.batchSizeLoad !== context.uploadBatchSize) {
+        // See NOTE in persistedPush
+        log.warning(`For dedup-as-loading mode, batchSizeLoad must equal uploadBatchSize. Setting batch size to ${finalUploadBatchSize}`);
+        context.batchSizeLoad = finalUploadBatchSize;
     }
 
     if (mode === DEDUP_AFTER_LOAD) {
