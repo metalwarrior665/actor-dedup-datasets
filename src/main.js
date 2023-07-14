@@ -3,7 +3,7 @@ const Apify = require('apify');
 const dedupAfterLoadFn = require('./dedup-after-load');
 const dedupAsLoadingFn = require('./dedup-as-loading');
 const { validateInput } = require('./input');
-const { betterSetInterval, getRealDatasetId } = require('./utils');
+const { getRealDatasetId } = require('./utils');
 const { MODES } = require('./consts');
 
 const { DEDUP_AFTER_LOAD, DEDUP_AS_LOADING } = MODES;
@@ -56,6 +56,9 @@ Apify.main(async () => {
         // Will automatically just load fields needed for dedup
         // These datasets needs to be loaded before the outputing datasets
         datasetIdsOfFilterItems,
+        
+        // This is passed to transform functions
+        customInputData,
 
         // Just debugging dataset duplications
         debugPlatform = false,
@@ -110,6 +113,7 @@ Apify.main(async () => {
         pushState,
         migrationState,
         verboseLog,
+        customInputData,
     };
 
     if (mode === DEDUP_AFTER_LOAD) {

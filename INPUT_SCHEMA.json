@@ -125,6 +125,13 @@
             "type": "array",
             "description": "The items from these datasets will be just used as a dedup filter for the main datasets. These items are loaded first and then the main datasets are compared for uniqueness and pushed.",
             "editor": "stringList"
+        },
+        "customInputData": {
+            "title": "Custom input data",
+            "type": "object",
+            "prefill": {},
+            "description": "You can pass custom data as a JSON object to be accessible in the transform functions as part of the 2nd parameter object.",
+            "editor": "json"
         }
     }
 }

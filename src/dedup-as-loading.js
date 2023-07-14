@@ -27,6 +27,7 @@ module.exports = async ({
     outputTo,
     migrationState,
     verboseLog,
+    customInputData,
 }) => {
     // We fill the state with datasetId object in the start to keep track of each dataset/offset batches
     for (const datasetId of datasetIds) {
@@ -51,14 +52,14 @@ module.exports = async ({
             // Pause here and let the actor migrate
             await new Promise(() => {});
         }
-        items = await preDedupTransformFn(items, { Apify, datasetId, datasetOffset });
+        items = await preDedupTransformFn(items, { Apify, datasetId, datasetOffset, customInputData });
         // We always process the whole batch but we push only those that were not pushed
         // The order inside a single batch is stable so we can do that
         let outputItems = dedup({ items, output, fields, dedupSet });
 
         log.info(`[Batch-${datasetId}-${datasetOffset}]: Loaded: ${items.length}, Total unique: ${dedupSet.size()}`);
 
-        outputItems = await postDedupTransformFn(outputItems, { Apify, datasetId, datasetOffset });
+        outputItems = await postDedupTransformFn(outputItems, { Apify, datasetId, datasetOffset, customInputData });
 
         if (typeof pushState[datasetId][datasetOffset] !== 'number') {
             pushState[datasetId][datasetOffset] = 0;

@@ -1,0 +1,6 @@
+{
+	"actorSpecification": 1,
+	"name": "dedup-datasets",
+	"version": "0.0",
+	"buildTag": "latest"
+}

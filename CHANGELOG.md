@@ -1,3 +1,7 @@
+## 2023-07-13
+*Features*
+- Add `customInputData` object to input for easy passing of custom values into `preDedupTransformFunction` and `postDedupTransformFunction`. It is part of the 2nd parameter object.
+
 ## 2021-01-24
 *Featues*
 - Added `fieldsToLoad` to input to increase speed and reducem meory if you don't need full items in output

@@ -30,7 +30,7 @@ You can access an object with helper variables, currently containing the [Apify 
 
 The default transformation does nothing with the items:
 ```javascript
-(items, { Apify }) => {
+(items, { Apify, customInputData }) => {
     return items;
 }
 ```
@@ -38,7 +38,7 @@ The default transformation does nothing with the items:
 In case of `dedup-as-loading` mode, you only have access to the items of the specific batch.
 But you can also access `datasetId` and `datasetOffset` parameters as each batch is only from one dataset.
 ```javascript
-(items, { Apify, datasetId, datasetOffset }) => {
+(items, { Apify, datasetId, datasetOffset, customInputData }) => {
     return items;
 }
 ```
