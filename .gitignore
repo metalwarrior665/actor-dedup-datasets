@@ -4,3 +4,4 @@ apify_storage
 # Added by Apify CLI
 storage
 .venv
+.DS_Store

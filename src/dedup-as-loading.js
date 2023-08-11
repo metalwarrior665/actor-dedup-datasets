@@ -91,16 +91,28 @@ module.exports = async ({
     };
 
     if (datasetIdsOfFilterItems) {
-        await loadDatasetItemsInParallel(
-            datasetIdsOfFilterItems,
-            {
-                fields,
-                batchSize: batchSizeLoad,
-                parallelLoads,
-                debugLog: true,
-                processFn: processFnNoPush,
-            },
-        );
+        // NOTE: Pepa Valek needed to skip the first time empty dataset
+        const validDatasetIds = [];
+        for (const datasetId of datasetIdsOfFilterItems || []) {
+            const datasetInfo = await Apify.newClient().dataset(datasetId).get();
+            if (datasetInfo && datasetInfo.id) {
+                validDatasetIds.push(datasetId);
+            } else {
+                log.warning(`Dataset ${datasetId} from datasetIdsOfFilterItems does not exist, skipping...`);
+            }
+        }
+        if (validDatasetIds.length > 0) {
+            await loadDatasetItemsInParallel(
+                validDatasetIds,
+                {
+                    fields,
+                    batchSize: batchSizeLoad,
+                    parallelLoads,
+                    debugLog: true,
+                    processFn: processFnNoPush,
+                },
+            );
+        }
     }
 
     await loadDatasetItemsInParallel(

@@ -30,20 +30,32 @@ module.exports = async ({
     const dedupSet = new BigSet();
 
     if (datasetIdsOfFilterItems) {
-        const items = await loadDatasetItemsInParallel(
-            datasetIdsOfFilterItems,
-            {
-                batchSize: batchSizeLoad,
-                // We only need to dedup fields here since we never push this
-                fields,
-                parallelLoads,
-                debugLog: true,
-                // For a single dataset, we can optimize the loading to skip loading what we pushed already after migration
-                // TODO: Make this work for multiple datasets in loadDatasetItemsInParallel
-            },
-        );
-        // This just fills the set
-        dedup({ items, output: 'nothing', fields, dedupSet });
+        // NOTE: Pepa Valek needed to skip the first time empty dataset
+        const validDatasetIds = [];
+        for (const datasetId of datasetIdsOfFilterItems || []) {
+            const datasetInfo = await Apify.newClient().dataset(datasetId).get();
+            if (datasetInfo && datasetInfo.id) {
+                validDatasetIds.push(datasetId);
+            } else {
+                log.warning(`Dataset ${datasetId} from datasetIdsOfFilterItems does not exist, skipping...`);
+            }
+        }
+        if (validDatasetIds.length > 0) {
+            const items = await loadDatasetItemsInParallel(
+                validDatasetIds,
+                {
+                    batchSize: batchSizeLoad,
+                    // We only need to dedup fields here since we never push this
+                    fields,
+                    parallelLoads,
+                    debugLog: true,
+                    // For a single dataset, we can optimize the loading to skip loading what we pushed already after migration
+                    // TODO: Make this work for multiple datasets in loadDatasetItemsInParallel
+                },
+            );
+            // This just fills the set
+            dedup({ items, output: 'nothing', fields, dedupSet });
+        }
     }
 
     if (!pushState.pushedItemsCount) {
