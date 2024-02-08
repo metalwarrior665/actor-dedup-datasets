@@ -107,14 +107,27 @@ module.exports.loadDatasetItemsInParallel = async (datasetIds, options = {}) => 
         // This array will be used to create promises to run in parallel
         const requestInfoArr = [];
 
-        for (const datasetId of datasetIds) {
+        for (let datasetId of datasetIds) {
             // We get the number of items first and then we precreate request info objects
             let itemCount;
             if (useLocalDataset) {
                 const dataset = await Apify.openDataset(datasetId);
                 itemCount = await dataset.getInfo().then((res) => res.itemCount);
             } else {
-                itemCount = await Apify.newClient().dataset(datasetId).get().then((res) => res.itemCount);
+                const datasetInfo = await Apify.newClient().dataset(datasetId).get();
+                if (datasetInfo) {
+                    itemCount = datasetInfo.itemCount;
+                } else {
+                    // We can be nice to users and check if they didn't accidentally use run ID
+                    const runInfo = await Apify.newClient().run(datasetId).get();
+                    if (runInfo) {
+                        datasetId = runInfo.defaultDatasetId;
+                        itemCount = await Apify.newClient().dataset(datasetId).get().then((res) => res.itemCount);
+                    } else {
+                        log.warning(`Dataset ${datasetId} does not exist, perhaps the run was already removed after data retention? Continuing...`);
+                        continue;
+                    }
+                }
             }
             if (debugLog) {
                 if (itemCount > 0) {
