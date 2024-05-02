@@ -29,13 +29,6 @@ module.exports = async ({
     verboseLog,
     customInputData,
 }) => {
-    // We fill the state with datasetId object in the start to keep track of each dataset/offset batches
-    for (const datasetId of datasetIds) {
-        if (!pushState[datasetId]) {
-            pushState[datasetId] = {};
-        }
-    }
-
     const outputDataset = await Apify.openDataset(outputDatasetId);
 
     // This ensures we keep unique dedup set for each actor run
@@ -61,6 +54,9 @@ module.exports = async ({
 
         outputItems = await postDedupTransformFn(outputItems, { Apify, datasetId, datasetOffset, customInputData });
 
+        if (!pushState[datasetId]) {
+            pushState[datasetId] = {};
+        }
         if (typeof pushState[datasetId][datasetOffset] !== 'number') {
             pushState[datasetId][datasetOffset] = 0;
         }
