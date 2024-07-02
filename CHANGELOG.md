@@ -1,3 +1,7 @@
+## 2024-07-03
+*Features*
+- Enable merging all datasets for runs of an Actor or Task with `actorOrTaskId`, `onlyRunsNewerThan`, `onlyRunsOlderThan` input parameters.
+
 ## 2023-07-13
 *Features*
 - Add `customInputData` object to input for easy passing of custom values into `preDedupTransformFunction` and `postDedupTransformFunction`. It is part of the 2nd parameter object.

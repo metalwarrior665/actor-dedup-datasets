@@ -5,6 +5,7 @@ const dedupAsLoadingFn = require('./dedup-as-loading');
 const { validateInput } = require('./input');
 const { getRealDatasetId } = require('./utils');
 const { MODES } = require('./consts');
+const { loadActorRunsDatasets } = require('./load-actor-runs');
 
 const { DEDUP_AFTER_LOAD, DEDUP_AS_LOADING } = MODES;
 const { log } = Apify.utils;
@@ -33,7 +34,7 @@ Apify.main(async () => {
     }
 
     const {
-        datasetIds,
+        datasetIds = [],
         // If no dedup fields are supplied, we skip the deduping
         fields,
         // Also can be a name of dataset (can be created by this actor)
@@ -56,9 +57,11 @@ Apify.main(async () => {
         // Will automatically just load fields needed for dedup
         // These datasets needs to be loaded before the outputing datasets
         datasetIdsOfFilterItems,
-        
         // This is passed to transform functions
         customInputData,
+
+        // ID can be a name too
+        actorOrTaskId, onlyRunsNewerThan, onlyRunsOlderThan,
 
         // Just debugging dataset duplications
         debugPlatform = false,
@@ -68,8 +71,17 @@ Apify.main(async () => {
         log.setLevel(log.LEVELS.DEBUG);
     }
 
-    validateInput({ datasetIds, fields, output, mode, outputTo, preDedupTransformFunction, postDedupTransformFunction });
+    validateInput({ datasetIds, actorOrTaskId, fields, output, mode, outputTo, preDedupTransformFunction, postDedupTransformFunction });
     const realOutputDatasetId = await getRealDatasetId(outputDatasetId);
+
+    if (actorOrTaskId) {
+        const loadedDatasetIds = await loadActorRunsDatasets({ actorOrTaskId, onlyRunsNewerThan, onlyRunsOlderThan });
+        log.info(`Loaded ${loadedDatasetIds.length} datasets from actor runs, adding them to the total `
+                + `list of ${datasetIds.length} datasets to load.`);
+        for (const loadedDataset of loadedDatasetIds) {
+            datasetIds.push(loadedDataset);
+        }
+    }
 
     const preDedupTransformFn = eval(preDedupTransformFunction);
     const postDedupTransformFn = eval(postDedupTransformFunction);

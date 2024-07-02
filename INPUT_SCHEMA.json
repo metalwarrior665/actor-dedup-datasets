@@ -64,6 +64,25 @@
             "editor": "javascript",
             "prefill": "async (items, { Apify }) => {\n    return items;\n}"
         },
+        "actorOrTaskId": {
+            "title": "Actor or Task ID (or name)",
+            "type": "string",
+            "description": "Use Actor or Task ID (e.g. `nwua9Gu5YrADL7ZDj`) or full name (e.g. `apify/instagram-scraper`).",
+            "editor": "textfield",
+            "sectionCaption": "Load datasets from actor or task"
+        },
+        "onlyRunsNewerThan": {
+            "title": "Only runs newer than",
+            "type": "string",
+            "description": "Use a date format of either `YYYY-MM-DD` or with time `YYYY-MM-DDTHH:mm:ss`.",
+            "editor": "datepicker"
+        },
+        "onlyRunsOlderThan": {
+            "title": "Only runs older than",
+            "type": "string",
+            "description": "Use a date format of either `YYYY-MM-DD` or with time `YYYY-MM-DDTHH:mm:ss`.",
+            "editor": "datepicker"
+        },
         "outputTo": {
             "title": "Where to output",
             "type": "string",
