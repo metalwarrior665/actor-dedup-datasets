@@ -2,7 +2,7 @@
     "title": "Spreadsheet import input",
     "type": "object",
     "schemaVersion": 1,
-    "required": ["datasetIds"],
+    "required": [],
     "properties": {
         "datasetIds": {
             "title": "Dataset IDs",
