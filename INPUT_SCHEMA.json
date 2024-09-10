@@ -139,6 +139,12 @@
             "description": "Good for smaller runs. Large runs might run out of log space.",
             "default": false
         },
+        "nullAsUnique": {
+            "title": "Null fields are unique",
+            "type": "boolean",
+            "description": "If you want to treat null (or missing) fields as always unique items.",
+            "default": false
+        },
         "datasetIdsOfFilterItems": {
             "title": "Dataset IDs for just deduping",
             "type": "array",
