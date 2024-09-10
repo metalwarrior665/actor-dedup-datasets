@@ -59,6 +59,9 @@ Apify.main(async () => {
         datasetIdsOfFilterItems,
         // This is passed to transform functions
         customInputData,
+        // Null and undefined are considered unique so we only dedup by fields with value
+        // If needed, we could make this per field
+        nullAsUnique = false,
 
         // ID can be a name too
         actorOrTaskId, onlyRunsNewerThan, onlyRunsOlderThan,
@@ -86,9 +89,12 @@ Apify.main(async () => {
     const preDedupTransformFn = eval(preDedupTransformFunction);
     const postDedupTransformFn = eval(postDedupTransformFunction);
 
+    const persistedSharedObject = (await Apify.getValue('PERSISTED-OBJECT') || {});
+
     const pushState = (await Apify.getValue('PUSHED')) || {};
     Apify.events.on('persistState', async () => {
         await Apify.setValue('PUSHED', pushState);
+        await Apify.setValue('PERSISTED-OBJECT', persistedSharedObject);
     });
 
     const migrationState = {
@@ -126,6 +132,8 @@ Apify.main(async () => {
         migrationState,
         verboseLog,
         customInputData,
+        nullAsUnique,
+        persistedSharedObject,
     };
 
     if (mode === DEDUP_AFTER_LOAD) {

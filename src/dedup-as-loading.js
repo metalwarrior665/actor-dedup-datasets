@@ -28,6 +28,8 @@ module.exports = async ({
     migrationState,
     verboseLog,
     customInputData,
+    nullAsUnique,
+    persistedSharedObject,
 }) => {
     const outputDataset = await Apify.openDataset(outputDatasetId);
 
@@ -45,14 +47,14 @@ module.exports = async ({
             // Pause here and let the actor migrate
             await new Promise(() => {});
         }
-        items = await preDedupTransformFn(items, { Apify, datasetId, datasetOffset, customInputData });
+        items = await preDedupTransformFn(items, { Apify, datasetId, datasetOffset, customInputData, persistedSharedObject });
         // We always process the whole batch but we push only those that were not pushed
         // The order inside a single batch is stable so we can do that
-        let outputItems = dedup({ items, output, fields, dedupSet });
+        let outputItems = dedup({ items, output, fields, dedupSet, nullAsUnique });
 
         log.info(`[Batch-${datasetId}-${datasetOffset}]: Loaded: ${items.length}, Total unique: ${dedupSet.size()}`);
 
-        outputItems = await postDedupTransformFn(outputItems, { Apify, datasetId, datasetOffset, customInputData });
+        outputItems = await postDedupTransformFn(outputItems, { Apify, datasetId, datasetOffset, customInputData, persistedSharedObject });
 
         if (!pushState[datasetId]) {
             pushState[datasetId] = {};
@@ -81,8 +83,8 @@ module.exports = async ({
     };
 
     const processFnNoPush = async (items, { datasetId, datasetOffset }) => {
-        items = await preDedupTransformFn(items, { Apify, datasetId, datasetOffset });
-        dedup({ items, output: 'nothing', fields, dedupSet });
+        items = await preDedupTransformFn(items, { Apify, datasetId, datasetOffset, persistedSharedObject, customInputData });
+        dedup({ items, output: 'nothing', fields, dedupSet, nullAsUnique });
         log.info(`[Batch-${datasetId}-${datasetOffset}]: Loaded: ${items.length}, Total unique: ${dedupSet.size()}`);
     };
 

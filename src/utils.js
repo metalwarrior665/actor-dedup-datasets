@@ -35,7 +35,7 @@ module.exports.betterSetInterval = (func, delay) => {
     funcWrapper();
 };
 
-module.exports.dedup = ({ items, output, fields, dedupSet }) => {
+module.exports.dedup = ({ items, output, fields, dedupSet, nullAsUnique = false }) => {
     // If no fields are provided, we don't do any deduping
     if (!fields || fields.length === 0) {
         return items;
@@ -47,6 +47,10 @@ module.exports.dedup = ({ items, output, fields, dedupSet }) => {
         const key = fields
             .map((field) => {
                 const value = item[field];
+
+                if (nullAsUnique && (value === null || value === undefined)) {
+                    return `${Math.random()}`;
+                }
                 // For deep equal comparing
                 return typeof value === 'object' ? JSON.stringify(value) : value;
             })

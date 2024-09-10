@@ -26,6 +26,8 @@ module.exports = async ({
     migrationState,
     verboseLog,
     customInputData,
+    nullAsUnique,
+    persistedSharedObject,
 }) => {
     const dedupSet = new BigSet();
 
@@ -54,7 +56,7 @@ module.exports = async ({
                 },
             );
             // This just fills the set
-            dedup({ items, output: 'nothing', fields, dedupSet });
+            dedup({ items, output: 'nothing', fields, dedupSet, nullAsUnique });
         }
     }
 
@@ -78,11 +80,11 @@ module.exports = async ({
         },
     );
 
-    items = await preDedupTransformFn(items, { Apify, customInputData });
+    items = await preDedupTransformFn(items, { Apify, customInputData, persistedSharedObject });
 
-    let outputItems = dedup({ items, output, fields, dedupSet });
+    let outputItems = dedup({ items, output, fields, dedupSet, nullAsUnique });
 
-    outputItems = await postDedupTransformFn(outputItems, { Apify, customInputData });
+    outputItems = await postDedupTransformFn(outputItems, { Apify, customInputData, persistedSharedObject });
 
     log.info(`Total loaded: ${items.length}, Total unique: ${dedupSet.size}, Total duplicates: ${items.length - dedupSet.size}`);
 

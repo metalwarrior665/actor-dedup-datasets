@@ -1,3 +1,8 @@
+## 2024-09-10
+*Features*
+- Add `persistedSharedObject` to transform functions input object. This object is shared for all transform function calls and persist over Actor migrations. This is useful mainly for the `dedup-as-loading` mode where the transform functions are called multiple times and only process a chunk of the data.
+- Add `nullAsUnique` to input. If set to true, the `null` and missing values are considered unique and not deduplicated.
+
 ## 2024-07-03
 *Features*
 - Enable merging all datasets for runs of an Actor or Task with `actorOrTaskId`, `onlyRunsNewerThan`, `onlyRunsOlderThan` input parameters.
