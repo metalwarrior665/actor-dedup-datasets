@@ -157,6 +157,12 @@
             "prefill": {},
             "description": "You can pass custom data as a JSON object to be accessible in the transform functions as part of the 2nd parameter object.",
             "editor": "json"
+        },
+        "appendDatasetIds": {
+            "title": "Append dataset IDs to items",
+            "type": "boolean",
+            "description": "Useful for transform functions. Each item will get a field `__datasetId__` with the dataset ID it came from.",
+            "default": false
         }
     }
 }

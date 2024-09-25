@@ -63,6 +63,8 @@ Apify.main(async () => {
         // If needed, we could make this per field
         nullAsUnique = false,
 
+        appendDatasetIds = false,
+
         // ID can be a name too
         actorOrTaskId, onlyRunsNewerThan, onlyRunsOlderThan,
 
@@ -134,6 +136,7 @@ Apify.main(async () => {
         customInputData,
         nullAsUnique,
         persistedSharedObject,
+        appendDatasetIds,
     };
 
     if (mode === DEDUP_AFTER_LOAD) {

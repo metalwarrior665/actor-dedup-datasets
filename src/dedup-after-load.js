@@ -28,6 +28,7 @@ module.exports = async ({
     customInputData,
     nullAsUnique,
     persistedSharedObject,
+    appendDatasetIds,
 }) => {
     const dedupSet = new BigSet();
 
@@ -51,6 +52,7 @@ module.exports = async ({
                     fields,
                     parallelLoads,
                     debugLog: true,
+                    appendDatasetIds,
                     // For a single dataset, we can optimize the loading to skip loading what we pushed already after migration
                     // TODO: Make this work for multiple datasets in loadDatasetItemsInParallel
                 },
@@ -77,6 +79,7 @@ module.exports = async ({
             // is bugged because we load less items and then push less
             offset,
             limit,
+            appendDatasetIds,
         },
     );
 

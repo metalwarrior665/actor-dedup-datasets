@@ -1,3 +1,7 @@
+## 2024-09-25
+*Features*
+- Add `appendDatasetIds` to input. This is useful for transforming functions if you need to check which dataset each item comes from.
+
 ## 2024-09-10
 *Features*
 - Add `persistedSharedObject` to transform functions input object. This object is shared for all transform function calls and persist over Actor migrations. This is useful mainly for the `dedup-as-loading` mode where the transform functions are called multiple times and only process a chunk of the data.
@@ -12,8 +16,8 @@
 - Add `customInputData` object to input for easy passing of custom values into `preDedupTransformFunction` and `postDedupTransformFunction`. It is part of the 2nd parameter object.
 
 ## 2021-01-24
-*Featues*
-- Added `fieldsToLoad` to input to increase speed and reducem meory if you don't need full items in output
+*Features*
+- Added `fieldsToLoad` to input to increase speed and reduce memory if you don't need full items in output
 - Added `limit` and `offset` to input to be able to process only slices of dataset
 - Removed `uploadSleepMs` as the platform can now handle much higher load of upload
 

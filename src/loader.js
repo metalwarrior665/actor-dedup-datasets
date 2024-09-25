@@ -33,6 +33,7 @@ const { log } = Apify.utils;
  * @param {boolean} options.useLocalDataset Datasets will be always loaded from Apify could, even locally
  * @param {boolean} [options.debugLog]
  * @param {boolean} [options.persistLoadingStateForProcesFn=false]
+ * @param {boolean} [options.appendDatasetIds=false]
  * Will not load batches that were already processed before migration, does nothing if processFn is not used.
  * It does not persist the state inside processFn, that is a responsibillity of the caller (if needed)
  * You must not manipulate input parameters (and underlying datasets) between migrations or this will break
@@ -51,6 +52,7 @@ module.exports.loadDatasetItemsInParallel = async (datasetIds, options = {}) => 
         fields,
         // Figure out better name since this is useful for datasets by name on platform
         useLocalDataset = false, // Will fetch/create datasets by id or name locally or on current account
+        appendDatasetIds = false,
     } = options;
 
     if (useLocalDataset && !Apify.isAtHome() && fields) {
@@ -219,6 +221,13 @@ module.exports.loadDatasetItemsInParallel = async (datasetIds, options = {}) => 
         } else {
             items = await Apify.newClient().dataset(datasetId).listItems(getDataOptions)
                 .then((res) => res.items);
+        }
+
+        if (appendDatasetIds) {
+            for (const item of items) {
+                // eslint-disable-next-line no-underscore-dangle
+                item.__datasetId__ = datasetId;
+            }
         }
 
         if (!totalLoadedPerDataset[datasetId]) {

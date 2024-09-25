@@ -30,6 +30,7 @@ module.exports = async ({
     customInputData,
     nullAsUnique,
     persistedSharedObject,
+    appendDatasetIds,
 }) => {
     const outputDataset = await Apify.openDataset(outputDatasetId);
 
@@ -108,6 +109,7 @@ module.exports = async ({
                     parallelLoads,
                     debugLog: true,
                     processFn: processFnNoPush,
+                    appendDatasetIds,
                 },
             );
         }
@@ -125,6 +127,7 @@ module.exports = async ({
             fields: fieldsToLoad,
             offset,
             limit,
+            appendDatasetIds,
         },
     );
 
