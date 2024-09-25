@@ -1,5 +1,6 @@
 const Apify = require('apify');
 const BigSet = require('big-set');
+const diff = require('fast-diff')
 
 const { loadDatasetItemsInParallel } = require('./loader');
 const { persistedPush, dedup } = require('./utils');
@@ -83,11 +84,11 @@ module.exports = async ({
         },
     );
 
-    items = await preDedupTransformFn(items, { Apify, customInputData, persistedSharedObject });
+    items = await preDedupTransformFn(items, { Apify, customInputData, persistedSharedObject, diff });
 
     let outputItems = dedup({ items, output, fields, dedupSet, nullAsUnique });
 
-    outputItems = await postDedupTransformFn(outputItems, { Apify, customInputData, persistedSharedObject });
+    outputItems = await postDedupTransformFn(outputItems, { Apify, customInputData, persistedSharedObject, diff });
 
     log.info(`Total loaded: ${items.length}, Total unique: ${dedupSet.size}, Total duplicates: ${items.length - dedupSet.size}`);
 

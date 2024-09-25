@@ -1,6 +1,7 @@
 ## 2024-09-25
 *Features*
 - Add `appendDatasetIds` to input. This is useful for transforming functions if you need to check which dataset each item comes from.
+- Add `diff` function to transform function's second parameter object. This is using the [fast-diff](https://www.npmjs.com/package/fast-diff) package. This can be used to compare changes between string fields of two datasets.
 
 ## 2024-09-10
 *Features*

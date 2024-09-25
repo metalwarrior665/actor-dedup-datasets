@@ -1,4 +1,5 @@
 const Apify = require('apify');
+const diff = require('fast-diff');
 
 const { loadDatasetItemsInParallel } = require('./loader');
 const { persistedPush, dedup } = require('./utils');
@@ -48,14 +49,14 @@ module.exports = async ({
             // Pause here and let the actor migrate
             await new Promise(() => {});
         }
-        items = await preDedupTransformFn(items, { Apify, datasetId, datasetOffset, customInputData, persistedSharedObject });
+        items = await preDedupTransformFn(items, { Apify, datasetId, datasetOffset, customInputData, persistedSharedObject, diff });
         // We always process the whole batch but we push only those that were not pushed
         // The order inside a single batch is stable so we can do that
         let outputItems = dedup({ items, output, fields, dedupSet, nullAsUnique });
 
         log.info(`[Batch-${datasetId}-${datasetOffset}]: Loaded: ${items.length}, Total unique: ${dedupSet.size()}`);
 
-        outputItems = await postDedupTransformFn(outputItems, { Apify, datasetId, datasetOffset, customInputData, persistedSharedObject });
+        outputItems = await postDedupTransformFn(outputItems, { Apify, datasetId, datasetOffset, customInputData, persistedSharedObject, diff });
 
         if (!pushState[datasetId]) {
             pushState[datasetId] = {};
