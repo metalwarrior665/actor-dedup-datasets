@@ -146,4 +146,5 @@ Apify.main(async () => {
     }
 
     await Apify.setValue('PUSHED', pushState);
+    await Apify.setValue('PERSISTED-OBJECT', persistedSharedObject);
 });
